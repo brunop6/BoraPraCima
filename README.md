@@ -113,8 +113,9 @@ estão marcados não são reescritos.
 ### Uso pensado para o corredor do hospital
 
 Boa parte das pessoas tem pouca prática digital e lê a escala no celular, muitas vezes no
-claro: alvos de toque de pelo menos 48px, texto grande e contraste alto. O tema escuro
-acompanha a preferência do sistema, para os turnos da madrugada.
+claro: alvos de toque de pelo menos 48px, texto grande e contraste alto. O tema troca
+sozinho pela hora do aparelho: claro das 06:00 às 18:00 e escuro no resto, para os turnos
+da madrugada. Não segue a preferência do sistema e não há botão para trocar.
 
 ## Telas
 

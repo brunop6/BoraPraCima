@@ -16,8 +16,8 @@
     <meta property="og:description" content="Escala de acompanhantes, compartilhada por link." />
     <meta name="robots" content="noindex, nofollow" />
 
-    <meta name="theme-color" content="#1f4d3f" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#142c2b" media="(prefers-color-scheme: dark)" />
+    <!-- A cor da barra do navegador acompanha o tema, que muda com a hora (ThemeService). -->
+    <meta name="theme-color" content="#1f4d3f" />
 
     <!-- Nunito para a interface, Satisfy só para o nome do produto. `display=swap`
          para o texto aparecer na fonte do sistema enquanto a da marca não chega:
@@ -29,7 +29,26 @@
       href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;700&family=Satisfy&display=swap"
     />
 
-    <link rel="icon" href="favicon.ico" sizes="any" />
+    <!-- O emblema da marca. A versão de 144px basta para a aba e é leve; o
+         `favicon.ico` genérico continua em public/, mas nada mais aponta para ele. -->
+    <link rel="icon" type="image/png" sizes="144x144" href="marca/emblema-144.png" />
+
+    <!--
+      O tema é decidido pela hora do aparelho: claro das 06:00 às 18:00, escuro no
+      resto. Roda aqui, antes do primeiro desenho, para a página não abrir branca de
+      madrugada; o ThemeService assume depois e faz as trocas. As horas e as cores
+      são as de core/theme/theme.util.ts: mexeu lá, mexa aqui.
+    -->
+    <script>
+      (function () {
+        var hour = new Date().getHours();
+        var dark = hour < 6 || hour >= 18;
+        document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+        document
+          .querySelector('meta[name="theme-color"]')
+          .setAttribute('content', dark ? '#142c2b' : '#1f4d3f');
+      })();
+    </script>
   </head>
   <body>
     <app-root></app-root>

@@ -49,6 +49,8 @@
    * `color-mix(in srgb, <escuro> calc(var(--theme-dark) * 100%), <claro>)`.
    */
   --theme-dark: 0;
+  /** Faz os controles nativos — seletor de hora, barra de rolagem — acompanharem o tema. */
+  color-scheme: light;
   /** Fundo da página em toda tela. Grava de `--color-text`, `--color-text-muted` e `--color-border-strong`. */
   --color-bg: #f7f5eb;
   /** Fundo de card, painel e barra. Grava de `--color-text` e `--color-text-muted`. Espelhado em `SURFACE_COLORS` de `core/color/member-color.ts`: mexeu aqui, mexa lá. */
@@ -217,7 +219,9 @@
 
 /**
  * Tema escuro para os turnos da madrugada, quando o quarto está apagado e uma tela
- * branca incomoda o paciente. Segue a preferência do sistema.
+ * branca incomoda o paciente. Vale das 18:00 às 06:00: quem troca `data-theme` no
+ * `<html>` é o `ThemeService` (e o script do `index.html`), pela hora do aparelho.
+ * Não segue a preferência do sistema de propósito.
  *
  * Não é o tema claro invertido. Os destaques (`--color-primary`) continuam verde
  * escuro com texto creme, só que mais fundos que as superfícies; como a diferença de
@@ -225,43 +229,42 @@
  * na cor da ação (`--color-primary-strong`, `--color-primary-mark`) clareia, e
  * `--color-now-line` esquenta. A paleta `--marca-*` não muda: a marca é uma só.
  */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --theme-dark: 1;
-    --color-bg: #142c2b;
-    --color-surface: #1f4d3f;
-    --color-surface-sunken: #0e211c;
-    --color-text: #f7f5eb;
-    --color-text-muted: #bccbbf;
-    --color-text-disabled: #7e8a82;
-    --color-border: #26493d;
-    --color-border-strong: #58a26f;
-    --color-primary: #0e211c;
-    --color-primary-hover: #173a30;
-    --color-primary-edge: #58a26f;
-    --color-primary-mark: #6fb88a;
-    --color-primary-strong: #8acfa4;
-    --color-primary-soft: #225444;
-    --color-primary-contrast: #f7f5eb;
-    --color-accent-soft: #3d3315;
-    --color-danger: #f0a0a4;
-    --color-danger-strong: #8e2f34;
-    --color-danger-contrast: #fff1f0;
-    --color-danger-soft: #40201f;
-    --color-warning: #f3c86a;
-    --color-warning-soft: #3d3315;
-    --color-success: #7fcf98;
-    --color-success-soft: #18352a;
-    --color-vacant-bg: #17352c;
-    --color-vacant-border: #7d9c8b;
-    --color-vacant-text: #cbd8cd;
-    --color-now-line: #e08a5a;
-    --color-grid: #22453a;
-    --color-focus: #f7c948;
-    --color-overlay: rgba(0, 0, 0, 0.65);
+:root[data-theme='dark'] {
+  --theme-dark: 1;
+  color-scheme: dark;
+  --color-bg: #142c2b;
+  --color-surface: #1f4d3f;
+  --color-surface-sunken: #0e211c;
+  --color-text: #f7f5eb;
+  --color-text-muted: #bccbbf;
+  --color-text-disabled: #7e8a82;
+  --color-border: #26493d;
+  --color-border-strong: #58a26f;
+  --color-primary: #0e211c;
+  --color-primary-hover: #173a30;
+  --color-primary-edge: #58a26f;
+  --color-primary-mark: #6fb88a;
+  --color-primary-strong: #8acfa4;
+  --color-primary-soft: #225444;
+  --color-primary-contrast: #f7f5eb;
+  --color-accent-soft: #3d3315;
+  --color-danger: #f0a0a4;
+  --color-danger-strong: #8e2f34;
+  --color-danger-contrast: #fff1f0;
+  --color-danger-soft: #40201f;
+  --color-warning: #f3c86a;
+  --color-warning-soft: #3d3315;
+  --color-success: #7fcf98;
+  --color-success-soft: #18352a;
+  --color-vacant-bg: #17352c;
+  --color-vacant-border: #7d9c8b;
+  --color-vacant-text: #cbd8cd;
+  --color-now-line: #e08a5a;
+  --color-grid: #22453a;
+  --color-focus: #f7c948;
+  --color-overlay: rgba(0, 0, 0, 0.65);
 
-    --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.40);
-    --shadow-2: 0 4px 12px rgba(0, 0, 0, 0.45);
-    --shadow-3: 0 -8px 28px rgba(0, 0, 0, 0.55);
-  }
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.40);
+  --shadow-2: 0 4px 12px rgba(0, 0, 0, 0.45);
+  --shadow-3: 0 -8px 28px rgba(0, 0, 0, 0.55);
 }

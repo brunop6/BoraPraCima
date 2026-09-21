@@ -3,6 +3,8 @@ import localePt from '@angular/common/locales/pt';
 import {
   ApplicationConfig,
   LOCALE_ID,
+  inject,
+  provideAppInitializer,
   provideBrowserGlobalErrorListeners,
   provideZoneChangeDetection,
 } from '@angular/core';
@@ -14,6 +16,7 @@ import {
 } from '@angular/router';
 
 import { provideFirebase } from './core/firebase/firebase.providers';
+import { ThemeService } from './core/theme/theme.service';
 import { routes } from './app.routes';
 
 registerLocaleData(localePt, 'pt-BR');
@@ -40,6 +43,7 @@ export const appConfig: ApplicationConfig = {
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes, ...routerFeatures),
     provideFirebase(),
+    provideAppInitializer(() => inject(ThemeService).start()),
     { provide: LOCALE_ID, useValue: 'pt-BR' },
   ],
 };
