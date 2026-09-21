@@ -12,6 +12,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { map, startWith } from 'rxjs';
 
+import { memberColorOf } from '../../../../core/color/member-color';
 import { HandoffRules } from '../../../../core/patient/handoff-rules';
 import { ButtonComponent } from '../../../../core/ui/button/button.component';
 import { FieldComponent } from '../../../../core/ui/field/field.component';
@@ -84,6 +85,11 @@ export interface ShiftSubmit {
                   {{ selectedMemberId() === member.id ? '●' : '○' }}
                 </span>
                 <span class="option__name">{{ member.name }}</span>
+                <span
+                  class="option__color"
+                  aria-hidden="true"
+                  [style.background]="colorOf(member)"
+                ></span>
               </button>
             }
           </div>
@@ -200,7 +206,17 @@ export interface ShiftSubmit {
     }
 
     .option__name {
+      flex: 1;
       font-size: var(--font-size-md);
+    }
+
+    /* Só reforço: quem é continua dito pelo nome. */
+    .option__color {
+      width: 1.25rem;
+      height: 1.25rem;
+      flex-shrink: 0;
+      border: 1px solid var(--color-border-strong);
+      border-radius: var(--radius-full);
     }
 
     .times {
@@ -341,6 +357,10 @@ export class ShiftSheetComponent implements OnInit {
 
   protected dateLabel(date: IsoDate): string {
     return `${weekdayLong(date)}, ${formatDayMonth(date)}`;
+  }
+
+  protected colorOf(member: FamilyMember): string {
+    return memberColorOf(member.id, member.color);
   }
 
   protected pick(memberId: string): void {

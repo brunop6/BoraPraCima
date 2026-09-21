@@ -23,6 +23,8 @@ import { Companion } from '../models/companion.model';
 export interface CompanionAssignment {
   id: string;
   name: string;
+  color: string;
+  transparency: number;
 }
 
 /** O que define um turno novo. A validação das regras do hospital roda antes. */
@@ -72,8 +74,10 @@ export class CompanionsService {
       startTime: draft.startTime,
       endTime: draft.endTime,
       familyMemberId: draft.member.id,
-      // O nome viaja junto porque a tela pública não pode ler `familyMembers`.
+      // Nome e aparência viajam junto porque a tela pública não pode ler `familyMembers`.
       familyMemberName: draft.member.name,
+      familyMemberColor: draft.member.color,
+      familyMemberTransparency: draft.member.transparency,
       note: null,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
@@ -93,6 +97,8 @@ export class CompanionsService {
     await updateDoc(this.companionRef(patientId, companionId), {
       familyMemberId: member.id,
       familyMemberName: member.name,
+      familyMemberColor: member.color,
+      familyMemberTransparency: member.transparency,
       updatedAt: serverTimestamp(),
       updatedBy,
     });

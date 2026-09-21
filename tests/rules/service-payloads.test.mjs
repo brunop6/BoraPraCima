@@ -131,6 +131,8 @@ describe('payloads dos services contra as rules', () => {
         endTime: '06:00',
         familyMemberId: 'member1',
         familyMemberName: 'Tia Marta',
+        familyMemberColor: '#1565c0',
+        familyMemberTransparency: 40,
         note: null,
         createdAt: FieldValue.serverTimestamp(),
         updatedAt: FieldValue.serverTimestamp(),
@@ -146,6 +148,8 @@ describe('payloads dos services contra as rules', () => {
       db.doc(`patients/${PUBLIC_PATIENT}/companions/shift1`).update({
         familyMemberId: 'member2',
         familyMemberName: 'Primo Léo',
+        familyMemberColor: '#ef6c00',
+        familyMemberTransparency: 50,
         updatedAt: FieldValue.serverTimestamp(),
         updatedBy: CO_ADMIN.uid,
       }),
@@ -183,6 +187,8 @@ describe('payloads dos services contra as rules', () => {
       db.collection(`patients/${PUBLIC_PATIENT}/familyMembers`).add({
         name: 'Primo Léo',
         phone: null,
+        color: '#ef6c00',
+        transparency: 40,
         active: true,
         createdAt: FieldValue.serverTimestamp(),
         updatedAt: FieldValue.serverTimestamp(),
@@ -200,6 +206,27 @@ describe('payloads dos services contra as rules', () => {
     await assertSucceeds(
       db.doc(`patients/${PUBLIC_PATIENT}/companions/shift1`).update({
         familyMemberName: 'Marta',
+        updatedAt: FieldValue.serverTimestamp(),
+      }),
+    );
+  });
+
+  it('FamilyMembersService.updateAppearance com propagação', async () => {
+    const db = as(testEnv, CO_ADMIN);
+
+    await assertSucceeds(
+      db.doc(`patients/${PUBLIC_PATIENT}/familyMembers/member1`).update({
+        color: '#d81b60',
+        transparency: 60,
+        updatedAt: FieldValue.serverTimestamp(),
+      }),
+    );
+
+    // A propagação para os turnos já escalados: é ela que chega à tela pública.
+    await assertSucceeds(
+      db.doc(`patients/${PUBLIC_PATIENT}/companions/shift1`).update({
+        familyMemberColor: '#d81b60',
+        familyMemberTransparency: 60,
         updatedAt: FieldValue.serverTimestamp(),
       }),
     );

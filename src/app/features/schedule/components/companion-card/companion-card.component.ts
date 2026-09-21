@@ -7,6 +7,11 @@ import {
   output,
 } from '@angular/core';
 
+import {
+  memberColorOf,
+  memberTextColors,
+  transparencyOf,
+} from '../../../../core/color/member-color';
 import { formatTimeRange } from '../../../../core/utils/time.util';
 import { PositionedCompanion } from '../../utils/day-layout.util';
 
@@ -22,6 +27,10 @@ import { PositionedCompanion } from '../../utils/day-layout.util';
     '[style.height.%]': 'item().height',
     '[style.left.%]': 'item().left',
     '[style.width.%]': 'item().width',
+    '[style.--member-color]': 'color()',
+    '[style.--member-weight]': 'weight()',
+    '[style.--member-text-light]': 'text().light',
+    '[style.--member-text-dark]': 'text().dark',
   },
   template: `
     <button
@@ -68,13 +77,24 @@ import { PositionedCompanion } from '../../utils/day-layout.util';
       padding: var(--space-2);
       overflow: hidden;
       text-align: left;
-      background: var(--color-primary-soft);
-      border: 1px solid var(--color-primary);
+      /*
+       * A cor do familiar, com a transparência dele: a grade de horas aparece por baixo.
+       * A borda fica cheia, então o card continua se destacando e a cor continua legível.
+       */
+      background: color-mix(in srgb, var(--member-color) var(--member-weight), transparent);
+      border: 1px solid color-mix(in srgb, var(--member-color) 75%, #000);
       border-left-width: 4px;
       border-radius: var(--radius-sm);
-      color: var(--color-text);
+      /* Texto calculado sobre a cor já misturada ao fundo de cada tema. */
+      color: var(--member-text-light);
       cursor: pointer;
       transition: filter var(--transition-fast);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .card {
+        color: var(--member-text-dark);
+      }
     }
 
     .card--past {
@@ -111,7 +131,9 @@ import { PositionedCompanion } from '../../utils/day-layout.util';
     .card__overnight {
       padding: 0 4px;
       border-radius: var(--radius-full);
+      /* Fundo próprio, então o texto também: não herda o do card. */
       background: var(--color-surface);
+      color: var(--color-text);
       font-weight: var(--font-weight-bold);
     }
 
@@ -131,6 +153,20 @@ export class CompanionCardComponent {
   readonly past = input(false, { transform: booleanAttribute });
 
   readonly chosen = output<PositionedCompanion['companion']>();
+
+  protected readonly color = computed(() => {
+    const { familyMemberId, familyMemberColor } = this.item().companion;
+    return memberColorOf(familyMemberId, familyMemberColor);
+  });
+
+  private readonly transparency = computed(() =>
+    transparencyOf(this.item().companion.familyMemberTransparency),
+  );
+
+  /** Quanto da cor entra na mistura com o fundo, em % (`color-mix` pede porcentagem). */
+  protected readonly weight = computed(() => `${100 - this.transparency()}%`);
+
+  protected readonly text = computed(() => memberTextColors(this.color(), this.transparency()));
 
   protected readonly time = computed(() =>
     formatTimeRange(this.item().companion.startTime, this.item().companion.endTime),

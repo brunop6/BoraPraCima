@@ -16,6 +16,16 @@ export interface FamilyMember {
   name: string;
   /** Opcional, só para os admins. Nunca sai no link público. */
   phone: string | null;
+  /**
+   * Cor do familiar no calendário (`#rrggbb`). Ausente em cadastros anteriores à cor:
+   * leia sempre por `memberColorOf`. Copiada para `Companion.familyMemberColor`.
+   */
+  color?: string;
+  /**
+   * Transparência do card no calendário, em % (40 a 95). Ausente em cadastros anteriores:
+   * leia sempre por `transparencyOf`. Também copiada para o `Companion`.
+   */
+  transparency?: number;
   /** Desativado some das opções de escala, sem apagar o histórico. */
   active: boolean;
   createdAt?: Timestamp;

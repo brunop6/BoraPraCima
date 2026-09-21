@@ -1,12 +1,20 @@
-import { ChangeDetectionStrategy, Component, inject, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { switchMap } from 'rxjs';
 
+import { isValidHexColor } from '../../../../core/color/color.util';
+import {
+  DEFAULT_TRANSPARENCY,
+  memberColorOf,
+  nextFreeMemberColor,
+  transparencyOf,
+} from '../../../../core/color/member-color';
 import { ButtonComponent } from '../../../../core/ui/button/button.component';
 import { FieldComponent } from '../../../../core/ui/field/field.component';
 import { SheetComponent } from '../../../../core/ui/sheet/sheet.component';
 import { ToastService } from '../../../../core/ui/toast/toast.service';
+import { ColorPickerComponent } from '../../components/color-picker/color-picker.component';
 import { FamilyMember } from '../../models/family-member.model';
 import { FamilyMembersService } from '../../services/family-members.service';
 
@@ -19,7 +27,13 @@ import { FamilyMembersService } from '../../services/family-members.service';
 @Component({
   selector: 'app-family-members-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ReactiveFormsModule, ButtonComponent, FieldComponent, SheetComponent],
+  imports: [
+    ReactiveFormsModule,
+    ButtonComponent,
+    ColorPickerComponent,
+    FieldComponent,
+    SheetComponent,
+  ],
   template: `
     <div class="page">
       <p class="intro">
@@ -33,6 +47,12 @@ import { FamilyMembersService } from '../../services/family-members.service';
         <ul class="members">
           @for (member of members(); track member.id) {
             <li class="member" [class.is-inactive]="!member.active">
+              <span
+                class="member__color"
+                aria-hidden="true"
+                [style.background]="colorOf(member)"
+              ></span>
+
               <div class="member__info">
                 <span class="member__name">{{ member.name }}</span>
                 @if (member.phone) {
@@ -80,7 +100,18 @@ import { FamilyMembersService } from '../../services/family-members.service';
             />
           </app-field>
 
-          <app-button type="submit" block [disabled]="form.invalid" [loading]="saving()">
+          <app-color-picker
+            [(color)]="color"
+            [(transparency)]="transparency"
+            [previewName]="name()"
+          />
+
+          <app-button
+            type="submit"
+            block
+            [disabled]="form.invalid || colorInvalid()"
+            [loading]="saving()"
+          >
             Salvar
           </app-button>
 
@@ -131,6 +162,15 @@ import { FamilyMembersService } from '../../services/family-members.service';
 
     .member.is-inactive {
       opacity: 0.65;
+    }
+
+    /* Só reforço: quem é continua dito pelo nome. */
+    .member__color {
+      width: 1.25rem;
+      height: 1.25rem;
+      flex-shrink: 0;
+      border: 1px solid var(--color-border-strong);
+      border-radius: var(--radius-full);
     }
 
     .member__info {
@@ -197,15 +237,30 @@ export class FamilyMembersPage {
     phone: [''],
   });
 
+  protected readonly name = toSignal(this.form.controls.name.valueChanges, { initialValue: '' });
+
+  /** Cor e transparência em edição no seletor. Fora do form porque ele usa `model()`. */
+  protected readonly color = signal('');
+  protected readonly transparency = signal(DEFAULT_TRANSPARENCY);
+  protected readonly colorInvalid = computed(() => !isValidHexColor(this.color()));
+
+  protected colorOf(member: FamilyMember): string {
+    return memberColorOf(member.id, member.color);
+  }
+
   protected openAdd(): void {
     this.editing.set(null);
     this.form.reset({ name: '', phone: '' });
+    this.color.set(nextFreeMemberColor(this.members().map((member) => member.color)));
+    this.transparency.set(DEFAULT_TRANSPARENCY);
     this.sheetMode.set('add');
   }
 
   protected openEdit(member: FamilyMember): void {
     this.editing.set(member);
     this.form.setValue({ name: member.name, phone: member.phone ?? '' });
+    this.color.set(this.colorOf(member));
+    this.transparency.set(transparencyOf(member.transparency));
     this.sheetMode.set('edit');
   }
 
@@ -215,11 +270,12 @@ export class FamilyMembersPage {
   }
 
   protected async save(): Promise<void> {
-    if (this.form.invalid) {
+    if (this.form.invalid || this.colorInvalid()) {
       return;
     }
 
     const { name, phone } = this.form.getRawValue();
+    const appearance = { color: this.color(), transparency: this.transparency() };
     const member = this.editing();
 
     this.saving.set(true);
@@ -235,9 +291,17 @@ export class FamilyMembersPage {
           );
         }
 
+        if (
+          appearance.color !== this.colorOf(member) ||
+          appearance.transparency !== transparencyOf(member.transparency)
+        ) {
+          // Propaga a aparência nova para os turnos já escalados.
+          await this.familyMembers.updateAppearance(this.patientId(), member.id, appearance);
+        }
+
         await this.familyMembers.updateContact(this.patientId(), member.id, phone);
       } else {
-        await this.familyMembers.create(this.patientId(), name, phone);
+        await this.familyMembers.create(this.patientId(), name, appearance, phone);
         this.toast.success(`${name.trim()} cadastrado(a).`);
       }
 

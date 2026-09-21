@@ -10,9 +10,9 @@ responsáveis conseguem editar.
 
 ## Como funciona
 
-1. Um responsável cadastra o paciente e informa a **janela de revezamento** do hospital
-   (por exemplo, trocas só entre 06:00 e 21:00) e a permanência mínima de cada
-   acompanhante (padrão: 6h).
+1. Um responsável cria a conta, cadastra o paciente e informa a **janela de revezamento**
+   do hospital (por exemplo, trocas só entre 06:00 e 21:00) e a permanência mínima de
+   cada acompanhante (padrão: 6h).
 2. No calendário, o que ninguém cobre aparece escrito **Vago**. Toca num "Vago" ou em
    **Adicionar turno**.
 3. Escolhe quem vai (ou cadastra a pessoa ali mesmo), o dia e o horário em que chega e
@@ -21,6 +21,128 @@ responsáveis conseguem editar.
    horários descobertos; ninguém consegue alterar nada por ali.
 
 O link pode ser desligado a qualquer momento nos ajustes, sem trocar de endereço.
+
+### Quem usa
+
+| Quem | Tem conta? | O que pode |
+|---|---|---|
+| **Visitante do link** | Não | Ver o calendário. Nada mais: não edita e não vê telefones. |
+| **Familiar** | Não | É só um nome na escala. A maior parte da família nunca entra no sistema. |
+| **Responsável** | Sim | Editar a escala, os familiares e os dados do paciente; ligar e desligar o link; convidar outros responsáveis. |
+| **Dono** | Sim | Tudo o que o responsável faz, mais remover responsáveis e apagar o paciente. É quem cadastrou o paciente. |
+
+Familiar e responsável são coisas diferentes: o primeiro aparece no calendário, o segundo
+tem permissão de escrita. As telas insistem nessa distinção porque é a confusão mais fácil
+de cometer.
+
+## Regras de negócio
+
+### Turnos
+
+- Um **turno** é um acompanhante, num dia, de uma hora de chegada a uma de saída. Toda a
+  cobertura é feita de turnos.
+- O turno pertence ao **dia em que começa**. Se a saída é igual ou anterior à chegada, ele
+  vira a noite e termina no dia seguinte (o card mostra `+1`, e a continuação aparece na
+  coluna do dia seguinte com `↑ ontem`). Chegada e saída iguais valem 24 horas.
+- Datas e horas são o que está escrito (`2026-09-24`, `19:00`), sem fuso: quem abre o
+  link em outro lugar vê o mesmo dia.
+
+### Revezamento (regra do hospital, guardada no paciente)
+
+Um turno só é salvo se:
+
+1. **chegada e saída caem dentro da janela** de revezamento do paciente;
+2. **dura pelo menos a permanência mínima** (configurável de 30 minutos a 24 horas);
+3. **não se sobrepõe a outro turno**, inclusive entre dias. Encostar (a saída de um é a
+   chegada do outro) é a troca de turno, não conflito.
+
+A conferência roda enquanto a pessoa digita e **bloqueia** o botão de salvar, explicando o
+motivo em português e, quando o problema é o tempo mínimo, sugerindo a primeira saída
+possível. Mudar a janela ou o mínimo nos ajustes vale para os próximos turnos; os que já
+estão marcados não são reescritos.
+
+### "Vago"
+
+- Vago não é cadastrado: é a **lacuna entre turnos**, calculada a cada abertura do
+  calendário.
+- Só há vago **de agora em diante**: o que já passou e o que veio antes da internação não
+  é pintado de vago.
+- O bloco escreve "Vago" e tem borda tracejada; o estado nunca depende só da cor. Tocar
+  nele abre o painel de turno já com o horário da lacuna.
+
+### Familiares
+
+- Cada familiar tem nome, telefone (opcional, visível só para os responsáveis), cor e
+  transparência.
+- Pode ser cadastrado na tela de família ou na hora, ao escalar alguém que ainda não
+  existe.
+- **Renomear** atualiza o nome em todos os turnos dele.
+- **Tirar da escala** o remove das opções de novos turnos, sem mexer nos turnos já
+  combinados.
+- **Apagar** apaga também os turnos dele, que voltam a ser "Vago". A tela avisa quantos
+  ficarão vagos antes de confirmar.
+
+### Cor e transparência
+
+- Cada familiar tem uma cor no calendário: 10 sugeridas ou qualquer outra. Quem é
+  cadastrado recebe a primeira cor sugerida que ninguém usa ainda.
+- A **transparência** do card vai de 40% a 95%, de 5 em 5 (padrão: 40%). Perto de 95%, só a
+  borda do card o destaca.
+- Não há cor proibida: quem administra assume o risco de escolher algo parecido com o
+  "Vago". O que mantém o "Vago" inconfundível é o texto e a borda tracejada.
+- O texto do card se ajusta sozinho para continuar legível sobre a cor escolhida, no tema
+  claro e no escuro. As telas privada e pública mostram as mesmas cores.
+
+### Link público
+
+- Qualquer pessoa com o endereço vê o calendário, o nome do paciente e o leito. Não há
+  login, e nada nele é editável.
+- **Telefones nunca aparecem**, nem o cadastro de familiares.
+- Ligar e desligar é instantâneo e mantém o mesmo endereço: quem já tem o link deixa de
+  ver a escala assim que é desligado.
+
+### Responsáveis e convites
+
+- Um responsável convida outro pelo **e-mail**. A pessoa vê o convite ao entrar no sistema
+  com esse e-mail e aceita para virar responsável.
+- O convite **não dispara e-mail**: a tela orienta a avisar a pessoa por outro meio.
+- Qualquer responsável convida e cancela convites; só o **dono** remove responsáveis.
+- Só o dono apaga o paciente, o que também derruba o link do calendário. Não há como
+  desfazer.
+
+### Uso pensado para o corredor do hospital
+
+Boa parte das pessoas tem pouca prática digital e lê a escala no celular, muitas vezes no
+claro: alvos de toque de pelo menos 48px, texto grande e contraste alto. O tema escuro
+acompanha a preferência do sistema, para os turnos da madrugada.
+
+## Telas
+
+### Sem login
+
+| Endereço | Tela | O que faz |
+|---|---|---|
+| `/p/:id` | **Calendário público** | A escala em modo consulta: nome do paciente, leito, três dias por vez, legenda e um atalho "Sou responsável pela escala". Se o link estiver desligado, avisa que não está disponível. |
+| `/entrar` | **Entrar** | Google ou e-mail e senha. Leva a "Esqueci minha senha" e "Criar uma conta". |
+| `/cadastrar` | **Criar conta** | Nome, e-mail e senha (mínimo de 6 caracteres), ou Google. |
+| `/recuperar-senha` | **Esqueci minha senha** | Envia por e-mail um link para criar uma senha nova. |
+
+Quem já está logado e abre uma tela de entrada é redirecionado para a lista de pacientes.
+
+### Para responsáveis
+
+| Endereço | Tela | O que faz |
+|---|---|---|
+| `/pacientes` | **Pacientes** | Lista os pacientes de que a pessoa é responsável (leito, internação e se o link está desligado). Mostra convites recebidos, com o botão de aceitar, e o botão de sair. |
+| `/pacientes/novo` | **Cadastrar paciente** | Nome, leito (aparece no link público), hospital (opcional, só para responsáveis), data da internação e as regras de revezamento. Ao salvar, abre o calendário. |
+| `/pacientes/:id` | **Calendário** | Três dias lado a lado, com eixo de horas, linha de "agora" no dia de hoje e turnos passados esmaecidos. Setas andam três dias, "Hoje" volta ao presente. Toque num "Vago" ou em **Adicionar turno** para criar; toque num turno para trocar quem vai, o dia, os horários ou apagá-lo. |
+| `/pacientes/:id/familiares` | **Família** | Lista de familiares com a cor de cada um. Cadastrar e editar: nome, telefone, cor e transparência (com pré-visualização de como o card aparece). Tirar da escala e apagar. |
+| `/pacientes/:id/equipe` | **Responsáveis** | Quem pode editar a escala, convites enviados e o formulário de convite por e-mail. |
+| `/pacientes/:id/ajustes` | **Ajustes** | Link público (copiar, abrir o calendário, ligar e desligar), atalho para os responsáveis, dados do paciente e regras de revezamento e, só para o dono, apagar o paciente. |
+
+Dentro de um paciente, uma barra fixa embaixo alterna entre **Calendário**, **Família** e
+**Ajustes**; a tela de responsáveis é aberta a partir dos ajustes. Um endereço que não
+existe cai numa página de "não encontrada" com o caminho de volta.
 
 ## Stack
 
@@ -35,69 +157,11 @@ Sem Cloud Functions é uma decisão, não uma limitação aceita por acaso: a pr
 nomes e a exclusão de familiares rodam no navegador com `writeBatch`, e o aceite de convite é autorizado por uma
 regra do Firestore. Isso mantém o projeto sem cartão de crédito.
 
-## Começar
-
-Pré-requisitos: Node 22+, Java 17+ (para os emuladores), `firebase-tools`.
-
-```bash
-npm install
-```
-
-### 1. Criar o projeto no Firebase
-
-No [console do Firebase](https://console.firebase.google.com):
-
-1. Crie um projeto.
-2. **Authentication → Sign-in method**: habilite **Google** e **E-mail/senha**.
-3. **Firestore Database**: crie o banco em modo de produção, região `southamerica-east1`.
-4. **Configurações do projeto → Seus aplicativos → Web**: registre um app e copie o
-   objeto `firebaseConfig`.
-
-### 2. Apontar o código para ele
-
-Cole os valores em [`src/environments/environment.ts`](src/environments/environment.ts),
-substituindo os `TODO_`. Esses valores não são segredo — a proteção real está em
-`firestore.rules`.
-
-Depois, ajuste o `default` em [`.firebaserc`](.firebaserc) para o ID do seu projeto.
-
-### 3. Rodar
-
-```bash
-npm start          # app em http://localhost:4200 (aponta para os emuladores)
-npm run emulators  # Auth e Firestore locais, em outro terminal
-```
-
-Em desenvolvimento o app usa
-[`environment.development.ts`](src/environments/environment.development.ts), que liga
-os emuladores. Nenhum dado de teste toca o projeto real.
-
-### 4. Publicar
-
-```bash
-npm run build
-npx firebase deploy
-```
-
-O deploy publica o app, as `firestore.rules` e os índices de uma vez.
-
 ## Testes
 
-```bash
-npm run test:rules
-```
-
-As regras de negócio puras (revezamento, lacunas do calendário) têm specs de unidade:
-
-```bash
-ng test --watch=false --browsers=ChromeHeadless
-```
-
-Sobe o emulador do Firestore e roda 40 casos contra as regras de segurança. É o ponto
-do sistema onde um erro tem consequência real — um link público que deixasse escrever,
-ou que expusesse os telefones da família, seria uma falha visível para pessoas reais.
-
-Os testes cobrem três frentes:
+As regras do Firestore são o ponto do sistema onde um erro tem consequência real — um link
+público que deixasse escrever, ou que expusesse os telefones da família, seria uma falha
+visível para pessoas reais. Por isso rodam 41 casos contra o emulador, em três frentes:
 
 - **`public-access.test.mjs`** — o que o link público mostra e o que ele nunca mostra.
 - **`invites.test.mjs`** — a única escrita do sistema feita por quem ainda não é admin.
@@ -105,8 +169,10 @@ Os testes cobrem três frentes:
   regra pode estar correta em tese e mesmo assim recusar o que o app manda; este
   arquivo é o que prende as duas coisas juntas.
 
-Rodam em série (`--test-concurrency=1`) porque compartilham um emulador e cada suíte
-limpa o banco entre os casos.
+Rodam em série porque compartilham um emulador e cada suíte limpa o banco entre os casos.
+
+As regras de negócio puras (revezamento, lacunas do calendário, cor e contraste) têm specs
+de unidade.
 
 ## Organização
 
@@ -117,6 +183,7 @@ src/app/
   core/           # o que é compartilhado; não conhece nenhuma feature
     auth/         # sessão, guards, mensagens de erro em português
     firebase/     # único lugar que fala com @angular/fire; caminhos das coleções
+    color/        # cor e transparência do familiar: paleta, contraste do texto
     patient/      # shared kernel: o tipo Patient e a leitura do paciente
     layout/       # moldura das telas de um paciente
     ui/           # botão, campo, painel, estado vazio, avisos
@@ -160,9 +227,20 @@ calendário carrega um dia a mais de cada lado do que mostra. `start == end` val
 
 **O ID do turno é aleatório.** Sem molde não há chave natural. Veja "Dívidas conhecidas".
 
-**O nome do familiar está duplicado dentro de cada turno.** A tela pública não pode ler
-`familyMembers`, que guarda telefone. A duplicação é deliberada e custa a propagação em
-`FamilyMembersService.rename`.
+**O nome, a cor e a transparência do familiar estão duplicados dentro de cada turno.** A
+tela pública não pode ler `familyMembers`, que guarda telefone. A duplicação é deliberada
+e custa a propagação em `FamilyMembersService.rename` e `updateAppearance`.
+
+**A cor e a transparência do familiar são livres, sem veto.** Quem administra pode
+escolher qualquer cor, inclusive uma parecida com a do "Vago", e assume esse risco; o que
+mantém o "Vago" inconfundível é o bloco escrever "Vago" e ter borda tracejada, não a cor.
+A transparência vai de 40% a 95% (passo de 5): perto de 95% só a borda do card se
+destaca. Quem nunca escolheu (cadastros anteriores) recebe uma cor derivada do id
+(`memberColorOf`) e a transparência padrão de 40% (`transparencyOf`), iguais nas telas
+privada e pública, sem migração. O texto do card é calculado sobre a cor já misturada ao
+fundo, em cada tema (`memberTextColors`), para manter o contraste mínimo de 4,5:1. O fundo
+(`--color-surface`) existe duas vezes: em `styles/_tokens.scss` (fonte da verdade) e em
+`core/color/member-color.ts`; mexeu num, mexa no outro.
 
 **Convites ficam na raiz (`invites/{email}_{patientId}`), não como subcollection.**
 Mostrar "você tem um convite" exigiria procurar em todos os pacientes, ou seja, uma
@@ -193,5 +271,3 @@ regressões, não para forçar o impossível.
   espelhar `publicAccessEnabled` em cada documento filho.
 - **O convite não dispara e-mail.** Enviar exigiria Cloud Functions. A tela de
   responsáveis diz isso e orienta a avisar a pessoa por WhatsApp.
-- **A interface não foi exercitada em navegador automatizado.** Regras e payloads têm
-  cobertura automatizada; as telas foram verificadas por compilação e build.

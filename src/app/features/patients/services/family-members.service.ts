@@ -19,6 +19,13 @@ import { BatchOperation, commitInChunks } from '../../../core/firebase/batch.uti
 import { companionsPath, familyMembersPath } from '../../../core/firebase/paths';
 import { FamilyMember } from '../models/family-member.model';
 
+/** Como o familiar aparece no calendário. */
+export interface MemberAppearance {
+  color: string;
+  /** Em % (40 a 95). */
+  transparency: number;
+}
+
 @Injectable({ providedIn: 'root' })
 export class FamilyMembersService {
   private readonly firestore = inject(Firestore);
@@ -34,10 +41,17 @@ export class FamilyMembersService {
     );
   }
 
-  async create(patientId: string, name: string, phone: string | null = null): Promise<string> {
+  async create(
+    patientId: string,
+    name: string,
+    appearance: MemberAppearance,
+    phone: string | null = null,
+  ): Promise<string> {
     const created = await addDoc(collection(this.firestore, familyMembersPath(patientId)), {
       name: name.trim(),
       phone: phone?.trim() || null,
+      color: appearance.color,
+      transparency: appearance.transparency,
       active: true,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
@@ -63,6 +77,27 @@ export class FamilyMembersService {
 
     return this.updateAssignedCompanions(patientId, memberId, {
       familyMemberName: trimmed,
+    });
+  }
+
+  /**
+   * Troca a cor e a transparência do familiar e propaga para os turnos, pelo mesmo
+   * motivo do nome: a tela pública só enxerga o que viaja dentro de cada `Companion`.
+   */
+  async updateAppearance(
+    patientId: string,
+    memberId: string,
+    appearance: MemberAppearance,
+  ): Promise<number> {
+    await updateDoc(doc(this.firestore, `${familyMembersPath(patientId)}/${memberId}`), {
+      color: appearance.color,
+      transparency: appearance.transparency,
+      updatedAt: serverTimestamp(),
+    });
+
+    return this.updateAssignedCompanions(patientId, memberId, {
+      familyMemberColor: appearance.color,
+      familyMemberTransparency: appearance.transparency,
     });
   }
 

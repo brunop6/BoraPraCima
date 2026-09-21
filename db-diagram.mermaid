@@ -57,6 +57,8 @@ erDiagram
     string    patientId                   FK
     string    name
     string    phone                       "NULLABLE, nunca público"
+    string    color                       "#rrggbb; ausente = derivada do id (memberColorOf)"
+    number    transparency                "40-95 (%), passo 5; ausente = 40 (transparencyOf)"
     boolean   active
     timestamp createdAt
     timestamp updatedAt
@@ -84,6 +86,8 @@ erDiagram
     string    endTime                     "HH:mm; endTime <= startTime = termina no dia seguinte; igual = 24h"
     string    familyMemberId              FK "NOT NULL"
     string    familyMemberName            "NOT NULL, desnormalizado p/ tela pública"
+    string    familyMemberColor           "#rrggbb, desnormalizado p/ tela pública; ausente = derivada do id"
+    number    familyMemberTransparency    "40-95 (%), desnormalizado p/ tela pública; ausente = 40"
     string    note                        "NULLABLE"
     timestamp createdAt
     timestamp updatedAt

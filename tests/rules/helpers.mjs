@@ -89,12 +89,16 @@ export async function seed(testEnv) {
         endTime: '21:00',
         familyMemberId: 'member1',
         familyMemberName: 'Tia Marta',
+        familyMemberColor: '#1565c0',
+        familyMemberTransparency: 40,
         note: null,
       });
 
       await db.doc(`patients/${patientId}/familyMembers/member1`).set({
         name: 'Tia Marta',
         phone: '11999999999',
+        color: '#1565c0',
+        transparency: 40,
         active: true,
       });
     }

@@ -89,8 +89,8 @@ interface PublicView {
         }
 
         <p class="legend">
-          <span class="legend__swatch" aria-hidden="true"></span> Escalado
-          <span class="legend__swatch legend__swatch--vacant" aria-hidden="true"></span> Vago
+          Cada cor é um familiar
+          <span class="legend__swatch" aria-hidden="true"></span> Vago
         </p>
 
         <footer class="footer">
@@ -190,16 +190,10 @@ interface PublicView {
     .legend__swatch {
       width: 1rem;
       height: 1rem;
-      border-radius: var(--radius-sm);
-      background: var(--color-primary-soft);
-      border: 1px solid var(--color-primary);
-    }
-
-    .legend__swatch--vacant {
       margin-left: var(--space-3);
+      border-radius: var(--radius-sm);
       background: var(--color-vacant-bg);
-      border-color: var(--color-vacant-border);
-      border-style: dashed;
+      border: 1px dashed var(--color-vacant-border);
     }
 
     .footer {
@@ -232,14 +226,12 @@ export class PublicCalendarPage {
     toObservable(this.patientId).pipe(
       switchMap((id) =>
         this.patientAccess.watch(id).pipe(
-          map(
-            (patient): PublicView => ({
-              // Documento ausente e link desligado dão na mesma para quem chegou
-              // pelo link: não há o que mostrar.
-              state: patient?.publicAccessEnabled ? 'ok' : 'unavailable',
-              patient,
-            }),
-          ),
+          map((patient): PublicView => ({
+            // Documento ausente e link desligado dão na mesma para quem chegou
+            // pelo link: não há o que mostrar.
+            state: patient?.publicAccessEnabled ? 'ok' : 'unavailable',
+            patient,
+          })),
           // O Firestore recusa a leitura quando o link está desligado; isso não é
           // uma falha, é a resposta.
           catchError(() => of<PublicView>({ state: 'unavailable', patient: null })),

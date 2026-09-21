@@ -3,6 +3,12 @@ import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { switchMap } from 'rxjs';
 
 import { AuthService } from '../../../../core/auth/auth.service';
+import {
+  DEFAULT_TRANSPARENCY,
+  memberColorOf,
+  nextFreeMemberColor,
+  transparencyOf,
+} from '../../../../core/color/member-color';
 import { PatientAccessService } from '../../../../core/patient/patient-access.service';
 import { DEFAULT_TIMEZONE } from '../../../../core/patient/patient.model';
 import { ButtonComponent } from '../../../../core/ui/button/button.component';
@@ -74,8 +80,8 @@ import { VacantGap } from '../../utils/day-layout.util';
       />
 
       <p class="legend">
-        <span class="legend__swatch" aria-hidden="true"></span> Escalado
-        <span class="legend__swatch legend__swatch--vacant" aria-hidden="true"></span> Vago
+        Cada cor é um familiar
+        <span class="legend__swatch" aria-hidden="true"></span> Vago
       </p>
     }
 
@@ -173,16 +179,10 @@ import { VacantGap } from '../../utils/day-layout.util';
     .legend__swatch {
       width: 1rem;
       height: 1rem;
-      border-radius: var(--radius-sm);
-      background: var(--color-primary-soft);
-      border: 1px solid var(--color-primary);
-    }
-
-    .legend__swatch--vacant {
       margin-left: var(--space-3);
+      border-radius: var(--radius-sm);
       background: var(--color-vacant-bg);
-      border-color: var(--color-vacant-border);
-      border-style: dashed;
+      border: 1px dashed var(--color-vacant-border);
     }
   `,
 })
@@ -299,11 +299,23 @@ export class CalendarPage {
   /** Cadastra o familiar na hora, sem ida e volta até a tela de família. */
   private async resolveMember(submit: ShiftSubmit): Promise<CompanionAssignment> {
     if (submit.who.kind === 'existing') {
-      return { id: submit.who.member.id, name: submit.who.member.name };
+      const { id, name, color, transparency } = submit.who.member;
+      return {
+        id,
+        name,
+        color: memberColorOf(id, color),
+        transparency: transparencyOf(transparency),
+      };
     }
 
-    const id = await this.familyMembers.create(this.patientId(), submit.who.name);
-    return { id, name: submit.who.name };
+    // Quem nasce aqui já entra com uma cor que ninguém da família usa ainda.
+    const color = nextFreeMemberColor(this.members().map((member) => member.color));
+    const transparency = DEFAULT_TRANSPARENCY;
+    const id = await this.familyMembers.create(this.patientId(), submit.who.name, {
+      color,
+      transparency,
+    });
+    return { id, name: submit.who.name, color, transparency };
   }
 
   protected async removeCompanion(companion: Companion): Promise<void> {

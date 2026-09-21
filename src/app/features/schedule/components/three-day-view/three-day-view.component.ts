@@ -145,6 +145,12 @@ import { VacantGapComponent } from '../vacant-gap/vacant-gap.component';
     .calendar__body {
       display: grid;
       grid-template-columns: var(--axis-width) 1fr;
+      /*
+       * Contexto de empilhamento próprio: o z-index dos cards e da linha de "agora"
+       * vale só aqui dentro. Sem isto eles disputam camada com o cabeçalho fixo e, por
+       * virem depois no DOM, passam por cima dele ao rolar e escondem o dia.
+       */
+      isolation: isolate;
     }
 
     .calendar__axis {

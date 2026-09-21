@@ -26,6 +26,14 @@ export interface Companion {
    * Mantido em dia por `FamilyMembersService.rename`.
    */
   familyMemberName: string;
+  /**
+   * Desnormalizado pelo mesmo motivo do nome, e mantido em dia por
+   * `FamilyMembersService.updateAppearance`. Ausente em turnos anteriores à cor: leia
+   * por `memberColorOf(familyMemberId, familyMemberColor)`.
+   */
+  familyMemberColor?: string;
+  /** Idem, para a transparência em %: leia por `transparencyOf`. */
+  familyMemberTransparency?: number;
   note: string | null;
   createdAt?: Timestamp;
   updatedAt?: Timestamp;
