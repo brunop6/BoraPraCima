@@ -41,6 +41,20 @@ export interface HourWindow {
   hours: number[];
 }
 
+/**
+ * Quanta largura cada coluna do calendário tem, o que decide o que cabe no card.
+ * `wide` é um dia só, `regular` são três e `compact` é a semana: sete colunas de
+ * cerca de 48px num celular, onde só cabem nome e horários curtos.
+ */
+export type ColumnDensity = 'wide' | 'regular' | 'compact';
+
+export function densityOf(dayCount: number): ColumnDensity {
+  if (dayCount <= 1) {
+    return 'wide';
+  }
+  return dayCount <= 3 ? 'regular' : 'compact';
+}
+
 /** O calendário mostra o dia inteiro: a cobertura é contínua, inclusive à noite. */
 export const FULL_DAY_WINDOW: HourWindow = {
   startMinutes: 0,

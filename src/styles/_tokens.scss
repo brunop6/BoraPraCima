@@ -1,148 +1,267 @@
 /**
- * Tokens de design.
+ * Tokens de design — Bora Pra Cima.
  *
- * Três restrições guiaram estes valores, todas vindas de quem vai usar o app:
+ * Gerado a partir do design system; os nomes são os que o app já usava, os valores
+ * vêm da identidade da marca. Três restrições continuam guiando tudo:
  *   - boa parte das pessoas tem pouca prática digital, então nada de alvo de
  *     toque pequeno nem de texto miúdo — a base é 17px e o alvo mínimo, 48px;
- *   - a leitura acontece em corredor de hospital, muitas vezes no claro, então o
- *     contraste do texto principal fica bem acima do mínimo da WCAG AA;
+ *   - a leitura acontece em corredor de hospital, muitas vezes no claro, então
+ *     todo par de texto e fundo daqui foi verificado em 4,5:1 nos dois temas,
+ *     e toda borda, anel de foco ou marca que significa algo, em 3:1;
  *   - o acompanhamento vira a noite, daí o tema escuro logo abaixo.
+ *
+ * Duas camadas que não se misturam: `--marca-*` é a identidade, com o mesmo valor
+ * nos dois temas, para ilustração e decisão de marca; `--color-*` é a interface, e
+ * é a única que uma tela deve consumir. Alcançou um `--marca-*` dentro de um
+ * componente? Provavelmente falta um token semântico.
  */
 
 :root {
+  // ------------------------------------------------------- paleta da marca
+  /** Verde principal da marca. É `--color-primary` no tema claro e a tinta do wordmark sobre creme. */
+  --marca-verde-principal: #1f4d3f;
+  /** Verde escuro da marca. É `--color-text` no tema claro e o texto sobre `--color-accent`. */
+  --marca-verde-escuro: #15382e;
+  /** Verde-azulado profundo medido no fundo da logo escura. É `--color-bg` no tema escuro. */
+  --marca-verde-profundo: #142c2b;
+  /** Verde natureza. Ilustrações e 1ª cor sugerida de familiar. */
+  --marca-verde-natureza: #4e8f62;
+  /** Amarelo sol. O ponto de energia e afeto: coração da logo, marcador de hoje, selo de convite. */
+  --marca-amarelo-sol: #f7c948;
+  /** Bege claro. É `--color-bg` no tema claro e a placa sob os ícones ilustrados nos DOIS temas. */
+  --marca-bege-claro: #f7f5eb;
+  /** Marrom telha. É `--color-now-line` no tema claro e o acento de telhado e madeira. */
+  --marca-marrom-telha: #a35a34;
+  /** Marrom madeira. Molduras quentes; cor sugerida de familiar. */
+  --marca-marrom-madeira: #5b3a28;
+  /** Cinza pedra. Neutro frio; cor sugerida de familiar. */
+  --marca-cinza-pedra: #9aa09a;
+  /** Rosa suave. Memória e afeto; cor sugerida de familiar. Nunca como cor de alerta sozinha. */
+  --marca-rosa-suave: #e89ba0;
+  /** Azul céu. Tranquilidade; cor sugerida de familiar e céu das ilustrações. */
+  --marca-azul-ceu: #7ec7e6;
+
   // ---------------------------------------------------------------- cores
-  --color-bg: #f4f7f8;
-  --color-surface: #ffffff;
-  --color-surface-sunken: #eceff1;
-
-  --color-text: #16222b;
-  --color-text-muted: #566874;
-  --color-text-inverse: #ffffff;
-
-  --color-border: #d6dfe4;
-  --color-border-strong: #b3c0c8;
-
-  --color-primary: #0f7b6c;
-  --color-primary-strong: #0a5c50;
-  --color-primary-soft: #e2f2ee;
-  --color-primary-contrast: #ffffff;
-
-  --color-danger: #a8261f;
-  --color-danger-soft: #fdeceb;
-
-  --color-warning: #7d5300;
-  --color-warning-soft: #fdf3e0;
-
-  --color-success: #1d6b3f;
-  --color-success-soft: #e6f3ea;
-
-  /** Turno sem ninguém escalado. Nunca é só a cor que informa: o card diz "Vago". */
-  --color-vacant-bg: #f7f9fa;
-  --color-vacant-border: #97a7b1;
-  --color-vacant-text: #4d5d68;
-
-  --color-now-line: #c2410c;
-
-  --color-focus: #1668b8;
-  --color-overlay: rgb(16 34 43 / 55%);
+  /**
+   * 0 no tema claro, 1 no escuro. Existe para a tinta do card de turno: ela é
+   * escolhida pelo MESMO bloco que define `--color-surface`, então fundo e texto
+   * nunca podem vir de temas diferentes. Consuma com
+   * `color-mix(in srgb, <escuro> calc(var(--theme-dark) * 100%), <claro>)`.
+   */
+  --theme-dark: 0;
+  /** Fundo da página em toda tela. Grava de `--color-text`, `--color-text-muted` e `--color-border-strong`. */
+  --color-bg: #f7f5eb;
+  /** Fundo de card, painel e barra. Grava de `--color-text` e `--color-text-muted`. Espelhado em `SURFACE_COLORS` de `core/color/member-color.ts`: mexeu aqui, mexa lá. */
+  --color-surface: #fffdf5;
+  /** Fundo rebaixado: eixo de horas, campo de formulário, faixa de dia passado. Grava de `--color-text` e `--color-text-muted`. */
+  --color-surface-sunken: #efebda;
+  /** Texto principal sobre `--color-bg`, `--color-surface` e `--color-surface-sunken`. É também o `DARK_TEXT` de `core/color/color.util.ts`. */
+  --color-text: #15382e;
+  /** Texto secundário — dica de campo, eixo de horas, legenda — sobre as três superfícies. */
+  --color-text-muted: #4e5c53;
+  /** Texto sobre verde cheio em qualquer tema. O do botão primário é `--color-primary-contrast`, creme nos dois temas. */
+  --color-text-inverse: #f7f5eb;
+  /** Só o rótulo de um controle desabilitado, que o WCAG isenta de contraste. Nunca conteúdo que a pessoa precise ler. */
+  --color-text-disabled: #818881;
+  /** Separador decorativo entre cards e linhas de lista. Não carrega significado sozinho. */
+  --color-border: #ded8c2;
+  /** Contorno de campo, de card selecionado e de botão secundário. Carrega significado: 3:1 nas três superfícies. */
+  --color-border-strong: #818881;
+  /**
+   * Preenchimento da ação principal: cabeçalho, botão primário, botão "+", opção
+   * marcada. É verde escuro com texto creme nos DOIS temas. Só preenchimento: para
+   * traço, contorno ou marcador na cor da ação use `--color-primary-mark`.
+   */
+  --color-primary: #1f4d3f;
+  /** O preenchimento principal sob o dedo. */
+  --color-primary-hover: #183d32;
+  /**
+   * Contorno do preenchimento principal. No claro some nele; no escuro é o que o
+   * separa das superfícies, que têm quase a mesma luminância. 3:1 contra elas.
+   */
+  --color-primary-edge: #1f4d3f;
+  /**
+   * Traço e marcador na cor da ação principal sobre as superfícies: foco de campo,
+   * rádio e opção selecionados, spinner. Continua claro no escuro. 3:1 nas superfícies.
+   */
+  --color-primary-mark: #1f4d3f;
+  /** Cor de link, de botão fantasma e do ícone da aba ativa: é texto, e clareia no escuro. */
+  --color-primary-strong: #183d32;
+  /** Tinta de fundo de botão fantasma em hover, aba ativa e disco de ícone. Grava de `--color-text` e `--color-text-muted`. */
+  --color-primary-soft: #e3ede4;
+  /** Texto e ícone dentro de `--color-primary`. */
+  --color-primary-contrast: #f7f5eb;
+  /** Amarelo sol cheio: marcador de hoje, selo de convite, gesto afetivo. Um por tela. Não muda entre temas. */
+  --color-accent: #f7c948;
+  /** Texto sobre `--color-accent`. Escuro nos dois temas, porque o amarelo não muda. */
+  --color-accent-contrast: #15382e;
+  /** Tinta de fundo do destaque de hoje e do aviso de atenção. Grava de `--color-text` e `--color-text-muted`. */
+  --color-accent-soft: #fdf1ce;
+  /** Texto e contorno de ação destrutiva sobre as três superfícies. */
+  --color-danger: #9c3b3f;
+  /** Preenchimento do botão destrutivo já confirmado. Só recebe `--color-danger-contrast`. */
+  --color-danger-strong: #9c3b3f;
+  /** Texto dentro de `--color-danger-strong`. */
+  --color-danger-contrast: #fff6f5;
+  /** Fundo do aviso destrutivo e hover do botão de perigo. Grava de `--color-text`. */
+  --color-danger-soft: #fbe9e7;
+  /** Texto de aviso — janela de revezamento estourada, mínimo de horas não atingido — sobre as três superfícies. */
+  --color-warning: #7a5410;
+  /** Fundo do aviso de atenção. É o mesmo tom de `--color-accent-soft` de propósito: o amarelo da marca é um só. */
+  --color-warning-soft: #fdf1ce;
+  /** Texto de confirmação — turno salvo, link copiado — sobre as três superfícies. */
+  --color-success: #2c6b43;
+  /** Fundo do aviso de confirmação. Grava de `--color-text`. */
+  --color-success-soft: #e4f0e7;
+  /** Fundo do bloco Vago. Sozinho não significa nada: o bloco escreve 'Vago' e usa `--color-vacant-border` tracejada. */
+  --color-vacant-bg: #efebda;
+  /** Borda tracejada de 2px do bloco Vago. Marca de significado: 3:1 contra `--color-vacant-bg` e `--color-bg`. */
+  --color-vacant-border: #7e8a76;
+  /** A palavra 'Vago' sobre `--color-vacant-bg`. */
+  --color-vacant-text: #3f4b41;
+  /** Linha do agora, só na coluna de hoje. Marca de significado: 3:1 contra `--color-bg` e `--color-surface-sunken`. */
+  --color-now-line: #a35a34;
+  /** Traço de hora na grade do calendário. Decorativo: a hora é sempre escrita em texto ao lado. */
+  --color-grid: #ded8c2;
+  /** Anel de foco do teclado, 3px com 2px de afastamento. O afastamento é o que o mantém visível em cima de `--color-primary`. */
+  --color-focus: #15382e;
+  /** Véu atrás do painel que sobe de baixo. */
+  --color-overlay: rgba(20, 44, 43, 0.55);
 
   // ------------------------------------------------------------ espaçamento
+  /** Folga entre um ícone e seu rótulo. */
   --space-1: 0.25rem;
+  /** Folga entre rótulo e campo, e entre etiquetas coladas. */
   --space-2: 0.5rem;
+  /** Espaçamento interno do card de turno e da etiqueta. */
   --space-3: 0.75rem;
+  /** Espaçamento interno do card e distância entre itens empilhados. */
   --space-4: 1rem;
+  /** Distância entre blocos de uma mesma seção e topo da página. */
   --space-5: 1.5rem;
+  /** Distância entre seções de uma tela. */
   --space-6: 2rem;
+  /** Folga no fim da rolagem, antes da barra fixa. */
   --space-7: 3rem;
-
   /** Respiro lateral da página no celular. */
   --page-gutter: 1rem;
+  /** Largura máxima de leitura nas telas de formulário e lista. */
   --content-max-width: 44rem;
+  /** Altura e largura mínimas de qualquer alvo de toque. Nenhum controle fica abaixo disto. */
+  --touch-target: 48px;
+  /** Altura da barra do topo. */
+  --header-height: 3.5rem;
+  /** Altura da barra de abas inferior, sem a área segura. O conteúdo reserva exatamente isto. */
+  --tabbar-height: 4.5rem;
 
   // ------------------------------------------------------------- tipografia
-  --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue',
-    Arial, sans-serif;
-
+  /** Tudo que a pessoa lê para se informar. */
+  --font-family: 'Nunito', ui-rounded, 'Segoe UI', system-ui, sans-serif;
+  /** Só o nome do produto e, no máximo uma vez por tela, uma saudação. Hora, nome, valor e rótulo nunca saem nela. */
+  --font-family-brand: 'Satisfy', 'Brush Script MT', cursive;
+  /** Etiqueta em caixa alta: VAGO, +1, ↑ ONTEM. */
   --font-size-xs: 0.8125rem;
+  /** Texto de apoio, dica de campo e hora no card. */
   --font-size-sm: 0.9375rem;
+  /** Corpo. É o piso do sistema: a escala é lida no corredor, no celular, muitas vezes no claro. */
   --font-size-md: 1.0625rem;
+  /** Cabeçalho de bloco e título de painel. */
   --font-size-lg: 1.25rem;
+  /** Título de tela. */
   --font-size-xl: 1.5rem;
+  /** Nome do produto em `--font-family-brand` e número grande. */
   --font-size-2xl: 1.875rem;
-
+  /** Títulos. */
   --line-height-tight: 1.25;
+  /** Texto corrido. */
   --line-height-normal: 1.5;
-
+  /** Corpo. */
   --font-weight-normal: 400;
+  /** Rótulo de botão e nome de familiar no card. */
   --font-weight-medium: 500;
+  /** Títulos, horas e etiquetas. */
   --font-weight-bold: 700;
 
   // ------------------------------------------------------------------ forma
+  /** Etiqueta, selo e anel de foco. */
   --radius-sm: 0.375rem;
+  /** Botão, campo de formulário, card de turno e bloco Vago. */
   --radius-md: 0.625rem;
+  /** Card de lista, aviso e a placa sob o ícone ilustrado. */
   --radius-lg: 1rem;
+  /** Botão redondo de ícone, chip e marcador de hoje. */
   --radius-full: 999px;
+  /** Card de lista e card de turno em repouso. Quente: é o verde da marca com opacidade, nunca cinza-azulado. */
+  --shadow-1: 0 1px 2px rgba(21, 56, 46, 0.08), 0 1px 3px rgba(21, 56, 46, 0.06);
+  /** Elemento que paira: menu, toast. */
+  --shadow-2: 0 4px 12px rgba(21, 56, 46, 0.12);
+  /** Painel que sobe de baixo e barra fixa, que projetam para cima. */
+  --shadow-3: 0 -8px 28px rgba(21, 56, 46, 0.18);
 
-  --shadow-1: 0 1px 2px rgb(16 34 43 / 8%), 0 1px 3px rgb(16 34 43 / 6%);
-  --shadow-2: 0 4px 12px rgb(16 34 43 / 12%);
-  --shadow-3: 0 -8px 28px rgb(16 34 43 / 18%);
-
-  /** Mínimo confortável de toque. Nenhum controle clicável fica abaixo disto. */
-  --touch-target: 48px;
-
-  --header-height: 3.5rem;
-
+  // -------------------------------------------------------------- movimento
+  /** Cor de fundo e de borda sob o dedo. */
   --transition-fast: 120ms ease;
+  /** Entrada e saída do painel. */
   --transition-base: 200ms ease;
 
-  // ------------------------------------------------------------------ camadas
+  // ---------------------------------------------------------------- camadas
+  /** Barra do topo. */
   --z-header: 10;
+  /** Véu atrás do painel. */
   --z-overlay: 100;
+  /** Painel que sobe de baixo. */
   --z-sheet: 110;
+  /** Confirmação passageira, acima de tudo. */
   --z-toast: 200;
 }
 
 /**
  * Tema escuro para os turnos da madrugada, quando o quarto está apagado e uma tela
  * branca incomoda o paciente. Segue a preferência do sistema.
+ *
+ * Não é o tema claro invertido. Os destaques (`--color-primary`) continuam verde
+ * escuro com texto creme, só que mais fundos que as superfícies; como a diferença de
+ * luminância é pequena, `--color-primary-edge` os contorna. O que é texto ou traço
+ * na cor da ação (`--color-primary-strong`, `--color-primary-mark`) clareia, e
+ * `--color-now-line` esquenta. A paleta `--marca-*` não muda: a marca é uma só.
  */
 @media (prefers-color-scheme: dark) {
   :root {
-    --color-bg: #0f171c;
-    --color-surface: #18242b;
-    --color-surface-sunken: #121c22;
+    --theme-dark: 1;
+    --color-bg: #142c2b;
+    --color-surface: #1f4d3f;
+    --color-surface-sunken: #0e211c;
+    --color-text: #f7f5eb;
+    --color-text-muted: #bccbbf;
+    --color-text-disabled: #7e8a82;
+    --color-border: #26493d;
+    --color-border-strong: #58a26f;
+    --color-primary: #0e211c;
+    --color-primary-hover: #173a30;
+    --color-primary-edge: #58a26f;
+    --color-primary-mark: #6fb88a;
+    --color-primary-strong: #8acfa4;
+    --color-primary-soft: #225444;
+    --color-primary-contrast: #f7f5eb;
+    --color-accent-soft: #3d3315;
+    --color-danger: #f0a0a4;
+    --color-danger-strong: #8e2f34;
+    --color-danger-contrast: #fff1f0;
+    --color-danger-soft: #40201f;
+    --color-warning: #f3c86a;
+    --color-warning-soft: #3d3315;
+    --color-success: #7fcf98;
+    --color-success-soft: #18352a;
+    --color-vacant-bg: #17352c;
+    --color-vacant-border: #7d9c8b;
+    --color-vacant-text: #cbd8cd;
+    --color-now-line: #e08a5a;
+    --color-grid: #22453a;
+    --color-focus: #f7c948;
+    --color-overlay: rgba(0, 0, 0, 0.65);
 
-    --color-text: #e8eef1;
-    --color-text-muted: #a2b1bb;
-
-    --color-border: #2b3b45;
-    --color-border-strong: #3d505c;
-
-    --color-primary: #4fbfa8;
-    --color-primary-strong: #74d4c0;
-    --color-primary-soft: #14342f;
-    --color-primary-contrast: #06231e;
-
-    --color-danger: #f28b82;
-    --color-danger-soft: #3a1f1d;
-
-    --color-warning: #e0b055;
-    --color-warning-soft: #33280f;
-
-    --color-success: #79c896;
-    --color-success-soft: #14301f;
-
-    --color-vacant-bg: #131e24;
-    --color-vacant-border: #4b5d69;
-    --color-vacant-text: #9fb0bb;
-
-    --color-now-line: #fb923c;
-
-    --color-focus: #6cb6f2;
-    --color-overlay: rgb(0 0 0 / 65%);
-
-    --shadow-1: 0 1px 2px rgb(0 0 0 / 40%);
-    --shadow-2: 0 4px 12px rgb(0 0 0 / 45%);
-    --shadow-3: 0 -8px 28px rgb(0 0 0 / 55%);
+    --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.40);
+    --shadow-2: 0 4px 12px rgba(0, 0, 0, 0.45);
+    --shadow-3: 0 -8px 28px rgba(0, 0, 0, 0.55);
   }
 }

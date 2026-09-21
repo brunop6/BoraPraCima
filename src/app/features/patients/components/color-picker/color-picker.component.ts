@@ -172,7 +172,7 @@ import {
       /* O polegar do controle é pequeno; a faixa toda vira alvo de toque. */
       height: var(--touch-target);
       margin: 0;
-      accent-color: var(--color-primary);
+      accent-color: var(--color-primary-mark);
       cursor: pointer;
     }
 
@@ -190,14 +190,13 @@ import {
       border: 1px solid color-mix(in srgb, var(--member-color) 75%, #000);
       border-left-width: 4px;
       border-radius: var(--radius-sm);
-      color: var(--member-text-light);
+      /* A mesma escolha de tinta do card de turno: presa ao tema dos tokens. */
+      color: color-mix(
+        in srgb,
+        var(--member-text-dark) calc(var(--theme-dark) * 100%),
+        var(--member-text-light)
+      );
       font-weight: var(--font-weight-bold);
-    }
-
-    @media (prefers-color-scheme: dark) {
-      .preview {
-        color: var(--member-text-dark);
-      }
     }
   `,
 })

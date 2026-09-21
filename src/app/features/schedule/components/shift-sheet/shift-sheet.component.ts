@@ -81,9 +81,7 @@ export interface ShiftSubmit {
                 [disabled]="saving()"
                 (click)="pick(member.id)"
               >
-                <span class="option__mark" aria-hidden="true">
-                  {{ selectedMemberId() === member.id ? '●' : '○' }}
-                </span>
+                <span class="option__mark" aria-hidden="true"></span>
                 <span class="option__name">{{ member.name }}</span>
                 <span
                   class="option__color"
@@ -140,7 +138,10 @@ export interface ShiftSubmit {
         @if (messages().length > 0) {
           <ul class="problems" role="alert">
             @for (message of messages(); track message) {
-              <li><span aria-hidden="true">⚠</span> {{ message }}</li>
+              <li class="problem">
+                <svg class="problem__icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01" /></svg>
+                <span>{{ message }}</span>
+              </li>
             }
           </ul>
         }
@@ -170,7 +171,7 @@ export interface ShiftSubmit {
     legend {
       padding: 0;
       margin-bottom: var(--space-2);
-      font-weight: var(--font-weight-semibold);
+      font-weight: var(--font-weight-bold);
     }
 
     .options {
@@ -185,7 +186,7 @@ export interface ShiftSubmit {
       gap: var(--space-3);
       width: 100%;
       /* Lista de toque, não de leitura: alvos grandes e bem separados. */
-      min-height: var(--touch-target);
+      min-height: 3.25rem;
       padding: var(--space-2) var(--space-3);
       background: var(--color-surface);
       border: 1px solid var(--color-border-strong);
@@ -194,20 +195,43 @@ export interface ShiftSubmit {
       cursor: pointer;
     }
 
+    /* Selecionado: contorno de 2px, fundo e negrito — não só a cor. */
     .option.is-selected {
-      border-color: var(--color-primary);
+      border-color: var(--color-primary-mark);
+      box-shadow: inset 0 0 0 1px var(--color-primary-mark);
       background: var(--color-primary-soft);
     }
 
     .option__mark {
-      font-size: var(--font-size-lg);
-      line-height: 1;
-      color: var(--color-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 1.375rem;
+      height: 1.375rem;
+      flex-shrink: 0;
+      border: 2px solid var(--color-border-strong);
+      border-radius: var(--radius-full);
+    }
+
+    .option.is-selected .option__mark {
+      border-color: var(--color-primary-mark);
+    }
+
+    .option.is-selected .option__mark::after {
+      content: '';
+      width: 0.625rem;
+      height: 0.625rem;
+      border-radius: var(--radius-full);
+      background: var(--color-primary-mark);
     }
 
     .option__name {
       flex: 1;
       font-size: var(--font-size-md);
+    }
+
+    .option.is-selected .option__name {
+      font-weight: var(--font-weight-bold);
     }
 
     /* Só reforço: quem é continua dito pelo nome. */
@@ -236,15 +260,33 @@ export interface ShiftSubmit {
       font-weight: var(--font-weight-medium);
     }
 
+    /**
+     * O turno travado é aviso, não erro: --color-warning sobre o amarelo suave, e a
+     * frase já diz o que fazer ("o fim pode ser a partir de 19:00").
+     */
     .problems {
       display: flex;
       flex-direction: column;
-      gap: var(--space-1);
+      gap: var(--space-2);
       margin: 0;
-      padding: 0;
+      padding: var(--space-3);
       list-style: none;
-      color: var(--color-danger);
+      background: var(--color-warning-soft);
+      border-radius: var(--radius-md);
+      color: var(--color-warning);
       font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-medium);
+      line-height: 1.4;
+    }
+
+    .problem {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .problem__icon {
+      flex: none;
     }
   `,
 })

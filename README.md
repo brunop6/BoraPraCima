@@ -122,7 +122,7 @@ acompanha a preferência do sistema, para os turnos da madrugada.
 
 | Endereço | Tela | O que faz |
 |---|---|---|
-| `/p/:id` | **Calendário público** | A escala em modo consulta: nome do paciente, leito, três dias por vez e um atalho "Sou responsável pela escala". Se o link estiver desligado, avisa que não está disponível. |
+| `/p/:id` | **Calendário público** | A escala em modo consulta: nome do paciente, leito, o mesmo seletor de Dia, 3 dias e Semana e um atalho "Sou responsável pela escala". Se o link estiver desligado, avisa que não está disponível. |
 | `/entrar` | **Entrar** | Google ou e-mail e senha. Leva a "Esqueci minha senha" e "Criar uma conta". |
 | `/cadastrar` | **Criar conta** | Nome, e-mail e senha (mínimo de 6 caracteres), ou Google. |
 | `/recuperar-senha` | **Esqueci minha senha** | Envia por e-mail um link para criar uma senha nova. |
@@ -135,7 +135,7 @@ Quem já está logado e abre uma tela de entrada é redirecionado para a lista d
 |---|---|---|
 | `/pacientes` | **Pacientes** | Lista os pacientes de que a pessoa é responsável (leito, internação e se o link está desligado). Mostra convites recebidos, com o botão de aceitar, e o botão de sair. |
 | `/pacientes/novo` | **Cadastrar paciente** | Nome, leito (aparece no link público), hospital (opcional, só para responsáveis), data da internação e as regras de revezamento. Ao salvar, abre o calendário. |
-| `/pacientes/:id` | **Calendário** | Três dias lado a lado, com eixo de horas, linha de "agora" no dia de hoje e turnos passados esmaecidos. Setas andam três dias, "Hoje" volta ao presente. Toque num "Vago" ou em **Adicionar turno** para criar; toque num turno para trocar quem vai, o dia, os horários ou apagá-lo. |
+| `/pacientes/:id` | **Calendário** | Três dias lado a lado, com eixo de horas, linha de "agora" no dia de hoje e turnos passados esmaecidos. Um seletor troca entre **Dia**, **3 dias** (o padrão) e **Semana** (domingo a sábado); trocar de visualização, ou tocar na que já está marcada, volta para hoje. A escolha fica guardada no navegador e vale na próxima vez que abrir, em qualquer paciente e no link público. Acima do calendário, o mês e o ano (`Setembro/2026`) e setas que andam um dia, três dias ou uma semana, conforme a visualização. Toque num "Vago" ou em **Adicionar turno** para criar; toque num turno para trocar quem vai, o dia, os horários ou apagá-lo. |
 | `/pacientes/:id/familiares` | **Família** | Lista de familiares com a cor de cada um. Cadastrar e editar: nome, telefone, cor e transparência (com pré-visualização de como o card aparece). Tirar da escala e apagar. |
 | `/pacientes/:id/equipe` | **Responsáveis** | Quem pode editar a escala, convites enviados e o formulário de convite por e-mail. |
 | `/pacientes/:id/ajustes` | **Ajustes** | Link público (copiar, abrir o calendário, ligar e desligar), atalho para os responsáveis, dados do paciente e regras de revezamento e, só para o dono, apagar o paciente. |

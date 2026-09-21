@@ -1,5 +1,5 @@
 import { Companion } from '../models/companion.model';
-import { FULL_DAY_WINDOW, VacancyContext, layoutDay } from './day-layout.util';
+import { FULL_DAY_WINDOW, VacancyContext, densityOf, layoutDay } from './day-layout.util';
 
 const day = '2026-09-24';
 const nextDay = '2026-09-25';
@@ -96,5 +96,13 @@ describe('layoutDay', () => {
 
     expect(layout.items.map((item) => item.width)).toEqual([50, 50]);
     expect(layout.items.map((item) => item.left)).toEqual([0, 50]);
+  });
+});
+
+describe('densityOf', () => {
+  it('dá a cada quantidade de dias a densidade da sua coluna', () => {
+    expect(densityOf(1)).toBe('wide');
+    expect(densityOf(3)).toBe('regular');
+    expect(densityOf(7)).toBe('compact');
   });
 });

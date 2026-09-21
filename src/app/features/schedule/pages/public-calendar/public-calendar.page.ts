@@ -1,14 +1,17 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, effect, inject, input } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import { catchError, map, of, startWith, switchMap } from 'rxjs';
 
 import { PatientAccessService } from '../../../../core/patient/patient-access.service';
 import { DEFAULT_TIMEZONE, Patient } from '../../../../core/patient/patient.model';
+import { BrandComponent } from '../../../../core/ui/brand/brand.component';
 import { EmptyStateComponent } from '../../../../core/ui/empty-state/empty-state.component';
 import { SpinnerComponent } from '../../../../core/ui/spinner/spinner.component';
-import { formatRange } from '../../../../core/utils/date.util';
+import { CalendarToolbarComponent } from '../../components/calendar-toolbar/calendar-toolbar.component';
 import { ThreeDayViewComponent } from '../../components/three-day-view/three-day-view.component';
+import { ViewSwitcherComponent } from '../../components/view-switcher/view-switcher.component';
+import { CALENDAR_VIEWS } from '../../models/calendar-view.model';
 import { CalendarStore } from '../../services/calendar.store';
 
 type LinkState = 'loading' | 'ok' | 'unavailable';
@@ -32,13 +35,22 @@ interface PublicView {
   selector: 'app-public-calendar-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [CalendarStore],
-  imports: [RouterLink, ThreeDayViewComponent, EmptyStateComponent, SpinnerComponent],
+  imports: [
+    RouterLink,
+    ThreeDayViewComponent,
+    EmptyStateComponent,
+    SpinnerComponent,
+    BrandComponent,
+    ViewSwitcherComponent,
+    CalendarToolbarComponent,
+  ],
   template: `
     @if (view().state === 'loading') {
       <app-spinner label="Abrindo a escala…" />
     } @else if (view().state === 'unavailable') {
       <app-empty-state
-        icon="🔒"
+        illustration="marca/natureza.png"
+        tag="Link desligado"
         title="Este link não está disponível"
         description="Quem organiza a escala pode ter desativado o compartilhamento. Peça um link novo para a família."
       >
@@ -46,33 +58,23 @@ interface PublicView {
       </app-empty-state>
     } @else if (view().patient; as patient) {
       <header class="header">
-        <p class="header__eyebrow">Escala de acompanhantes</p>
+        <app-brand size="lg" />
         <h1 class="header__name">{{ patient.name }}</h1>
         <p class="header__room">Leito {{ patient.room }}</p>
       </header>
 
-      <div class="toolbar">
-        <button type="button" class="toolbar__nav" (click)="store.previous()">
-          <span class="sr-only">Três dias antes</span>
-          <span aria-hidden="true">‹</span>
-        </button>
+      <app-view-switcher
+        [options]="views"
+        [value]="store.view()"
+        (changed)="store.setView($event)"
+      />
 
-        <p class="toolbar__range" aria-live="polite">{{ rangeLabel() }}</p>
-
-        <button type="button" class="toolbar__nav" (click)="store.next()">
-          <span class="sr-only">Três dias depois</span>
-          <span aria-hidden="true">›</span>
-        </button>
-
-        <button
-          type="button"
-          class="toolbar__today"
-          [disabled]="store.isShowingToday()"
-          (click)="store.goToToday()"
-        >
-          Hoje
-        </button>
-      </div>
+      <app-calendar-toolbar
+        [month]="store.monthLabel()"
+        [step]="store.stepLabel()"
+        (previous)="store.previous()"
+        (next)="store.next()"
+        />
 
       @if (store.isLoading()) {
         <app-spinner label="Carregando a escala…" />
@@ -102,68 +104,19 @@ interface PublicView {
     }
 
     .header {
-      padding: var(--space-4) var(--page-gutter);
+      padding: var(--space-4) var(--page-gutter) 20px;
       background: var(--color-primary);
       color: var(--color-primary-contrast);
-    }
-
-    .header__eyebrow {
-      font-size: var(--font-size-xs);
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      opacity: 0.85;
+      border-bottom: 1px solid var(--color-primary-edge);
     }
 
     .header__name {
-      margin-top: var(--space-1);
+      margin-top: var(--space-3);
       font-size: var(--font-size-xl);
     }
 
     .header__room {
-      font-size: var(--font-size-sm);
-      opacity: 0.9;
-    }
-
-    .toolbar {
-      display: flex;
-      align-items: center;
-      gap: var(--space-1);
-      padding: var(--space-2);
-      background: var(--color-surface);
-      border-bottom: 1px solid var(--color-border);
-    }
-
-    .toolbar__nav {
-      width: var(--touch-target);
-      height: var(--touch-target);
-      flex-shrink: 0;
-      background: transparent;
-      border: none;
-      border-radius: var(--radius-full);
-      font-size: var(--font-size-xl);
-      color: var(--color-text);
-      cursor: pointer;
-    }
-
-    .toolbar__range {
-      flex: 1;
-      text-align: center;
-      font-weight: var(--font-weight-medium);
-    }
-
-    .toolbar__today {
-      min-height: var(--touch-target);
-      padding: 0 var(--space-3);
-      background: transparent;
-      border: 1px solid var(--color-border-strong);
-      border-radius: var(--radius-md);
-      font-size: var(--font-size-sm);
-      cursor: pointer;
-    }
-
-    .toolbar__today:disabled {
-      opacity: 0.4;
-      cursor: default;
+      margin-top: 2px;
     }
 
     .notice {
@@ -187,6 +140,8 @@ interface PublicView {
       min-height: var(--touch-target);
       display: inline-flex;
       align-items: center;
+      font-size: var(--font-size-md);
+      font-weight: var(--font-weight-bold);
     }
   `,
 })
@@ -195,6 +150,7 @@ export class PublicCalendarPage {
 
   protected readonly store = inject(CalendarStore);
   protected readonly defaultTimezone = DEFAULT_TIMEZONE;
+  protected readonly views = CALENDAR_VIEWS;
 
   private readonly patientAccess = inject(PatientAccessService);
 
@@ -217,11 +173,6 @@ export class PublicCalendarPage {
     ),
     { initialValue: { state: 'loading', patient: null } as PublicView },
   );
-
-  protected readonly rangeLabel = computed(() => {
-    const dates = this.store.visibleDates();
-    return formatRange(dates[0], dates[dates.length - 1]);
-  });
 
   constructor() {
     effect(() => this.store.patientId.set(this.patientId()));

@@ -11,25 +11,33 @@ export interface PaletteColor {
   hex: HexColor;
 }
 
-/** Cores sugeridas, bem separadas entre si. Todas legíveis com texto por cima. */
+/**
+ * Cores sugeridas, na ordem em que são atribuídas: quem é cadastrado recebe a
+ * primeira que ninguém usa ainda. Oito saem da paleta da marca; lilás sereno e
+ * pêssego foram acrescentados para fechar dez, porque a marca não tem matizes
+ * distintos suficientes.
+ *
+ * Nenhuma é vetada por ser parecida com a do Vago: o que mantém o Vago
+ * inconfundível é o bloco escrever "Vago" e ter borda tracejada, não a cor.
+ */
 export const MEMBER_PALETTE: readonly PaletteColor[] = [
-  { name: 'Azul', hex: '#1565c0' },
-  { name: 'Laranja', hex: '#ef6c00' },
-  { name: 'Verde', hex: '#2e7d32' },
-  { name: 'Rosa', hex: '#d81b60' },
-  { name: 'Roxo', hex: '#6a1b9a' },
-  { name: 'Turquesa', hex: '#009688' },
-  { name: 'Amarelo', hex: '#f9c600' },
-  { name: 'Vermelho', hex: '#c62828' },
-  { name: 'Marrom', hex: '#795548' },
-  { name: 'Índigo', hex: '#3949ab' },
+  { name: 'Verde natureza', hex: '#4e8f62' },
+  { name: 'Azul céu', hex: '#7ec7e6' },
+  { name: 'Amarelo sol', hex: '#f7c948' },
+  { name: 'Rosa suave', hex: '#e89ba0' },
+  { name: 'Marrom telha', hex: '#a35a34' },
+  { name: 'Lilás sereno', hex: '#a79ac4' },
+  { name: 'Verde principal', hex: '#1f4d3f' },
+  { name: 'Cinza pedra', hex: '#9aa09a' },
+  { name: 'Pêssego', hex: '#f0b08a' },
+  { name: 'Marrom madeira', hex: '#5b3a28' },
 ];
 
 /**
  * O fundo do calendário nos dois temas: é sobre ele que a transparência do card
  * aparece. Espelha `--color-surface` de `styles/_tokens.scss`.
  */
-export const SURFACE_COLORS = { light: '#ffffff', dark: '#18242b' } as const;
+export const SURFACE_COLORS = { light: '#fffdf5', dark: '#1f4d3f' } as const;
 
 /**
  * Transparência do card, em %. Perto de 95% o card quase some no fundo e só a borda
@@ -55,9 +63,23 @@ export function colorWeight(transparency: number): number {
   return (100 - transparency) / 100;
 }
 
+/** Quanto da cor um turno de dia passado mantém: a mistura recua 45% em direção ao fundo. */
+export const PAST_COLOR_KEEP = 0.55;
+
+/**
+ * A transparência com que um turno é desenhado. Dia passado empalidece pela COR —
+ * a transparência sobe e a tinta é recalculada sobre o resultado —, nunca por
+ * `opacity` no card, que apagaria o texto junto e levaria o contraste para perto de
+ * 2:1. O valor pode sair da grade de 5 em 5: é só para desenhar, nunca é gravado.
+ */
+export function shownTransparency(transparency: number, past: boolean): number {
+  return past ? 100 - (100 - transparency) * PAST_COLOR_KEEP : transparency;
+}
+
 /**
  * Texto do card em cada tema: o que mais contrasta com a cor JÁ misturada ao fundo.
- * Os dois são calculados porque o tema só se sabe no CSS (`prefers-color-scheme`).
+ * Os dois são calculados porque o tema só se sabe no CSS; quem desenha escolhe
+ * entre eles por `--theme-dark`, do mesmo bloco de tokens que define o fundo.
  */
 export function memberTextColors(
   color: HexColor,

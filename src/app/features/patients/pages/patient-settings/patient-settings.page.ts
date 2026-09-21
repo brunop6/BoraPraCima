@@ -117,13 +117,13 @@ import { PatientsService } from '../../services/patients.service';
 
       @if (isOwner()) {
         <section class="card card--danger">
-          <h2>Apagar paciente</h2>
+          <h2>Apagar registros</h2>
           <p class="card__text">
             Apaga o cadastro e derruba o link do calendário. Não há como desfazer.
           </p>
 
           <app-button variant="danger" block [loading]="deleting()" (click)="remove()">
-            Apagar {{ patient()?.name }}
+            Apagar Calendário do Paciente
           </app-button>
         </section>
       }
@@ -187,7 +187,7 @@ import { PatientsService } from '../../services/patients.service';
       height: 1.5rem;
       margin-top: 2px;
       flex-shrink: 0;
-      accent-color: var(--color-primary);
+      accent-color: var(--color-primary-mark);
     }
 
     .toggle span {

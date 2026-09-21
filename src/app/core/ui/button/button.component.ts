@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, booleanAttribute, computed, input } from '@angular/core';
 
-export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
+export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'accent';
 export type ButtonSize = 'md' | 'lg';
 
 @Component({
@@ -41,7 +41,8 @@ export type ButtonSize = 'md' | 'lg';
       min-width: var(--touch-target);
       padding: 0 var(--space-4);
       border: 1px solid transparent;
-      border-radius: var(--radius-md);
+      /* Botão acompanha o card de lista: nada de canto vivo. */
+      border-radius: var(--radius-lg);
       font-size: var(--font-size-md);
       font-weight: var(--font-weight-medium);
       line-height: 1.2;
@@ -54,13 +55,15 @@ export type ButtonSize = 'md' | 'lg';
       font-size: var(--font-size-lg);
     }
 
+    /* O contorno só aparece no escuro, onde o verde do botão encosta no das superfícies. */
     .btn--primary {
       background: var(--color-primary);
+      border-color: var(--color-primary-edge);
       color: var(--color-primary-contrast);
     }
 
     .btn--primary:hover:not(:disabled) {
-      background: var(--color-primary-strong);
+      background: var(--color-primary-hover);
     }
 
     .btn--secondary {
@@ -82,6 +85,16 @@ export type ButtonSize = 'md' | 'lg';
       background: var(--color-primary-soft);
     }
 
+    /**
+     * O amarelo sol da marca: o gesto que a família gosta de fazer — adicionar um
+     * turno, copiar o link. No máximo um por tela; espalhado, o amarelo deixa de
+     * ser afeto e vira aviso.
+     */
+    .btn--accent {
+      background: var(--color-accent);
+      color: var(--color-accent-contrast);
+    }
+
     .btn--danger {
       background: var(--color-surface);
       color: var(--color-danger);
@@ -92,8 +105,15 @@ export type ButtonSize = 'md' | 'lg';
       background: var(--color-danger-soft);
     }
 
+    /**
+     * Desabilitado por cor, não por opacity. Apagar o botão inteiro apaga o
+     * rótulo junto, e o rótulo é justamente o que diz o que está travado — a mesma
+     * armadilha do card de turno esmaecido.
+     */
     .btn:disabled {
-      opacity: 0.55;
+      background: var(--color-surface-sunken);
+      border-color: transparent;
+      color: var(--color-text-disabled);
       cursor: not-allowed;
     }
 

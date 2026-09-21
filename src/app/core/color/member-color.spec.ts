@@ -10,6 +10,7 @@ import {
   memberColorOf,
   memberTextColors,
   nextFreeMemberColor,
+  shownTransparency,
   transparencyOf,
 } from './member-color';
 
@@ -114,5 +115,31 @@ describe('transparência', () => {
     expect(colorWeight(0)).toBe(1);
     expect(colorWeight(40)).toBeCloseTo(0.6, 10);
     expect(colorWeight(95)).toBeCloseTo(0.05, 10);
+  });
+});
+
+describe('shownTransparency', () => {
+  it('não mexe no turno de um dia que não passou', () => {
+    expect(shownTransparency(40, false)).toBe(40);
+  });
+
+  it('recua a cor do dia passado em 45% na direção do fundo', () => {
+    expect(colorWeight(shownTransparency(40, true))).toBeCloseTo(0.6 * 0.55, 10);
+  });
+
+  it('continua com texto legível (AA) no dia passado, em qualquer cor, transparência e tema', () => {
+    for (const { name, hex } of MEMBER_PALETTE) {
+      for (const transparency of TRANSPARENCY_STEPS) {
+        const shown = shownTransparency(transparency, true);
+        const text = memberTextColors(hex, shown);
+
+        for (const theme of ['light', 'dark'] as const) {
+          const background = blendOver(hex, SURFACE_COLORS[theme], colorWeight(shown));
+          expect(contrastRatio(background, text[theme]))
+            .withContext(`${name} a ${transparency}%, dia passado, tema ${theme}`)
+            .toBeGreaterThanOrEqual(MIN_TEXT_CONTRAST);
+        }
+      }
+    }
   });
 });

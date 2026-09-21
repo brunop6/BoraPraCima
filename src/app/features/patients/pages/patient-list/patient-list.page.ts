@@ -63,7 +63,7 @@ import { PatientsService } from '../../services/patients.service';
         <app-spinner label="Carregando…" />
       } @else if (patients()!.length === 0) {
         <app-empty-state
-          icon="🏥"
+          illustration="marca/chale.png"
           title="Nenhum paciente ainda"
           description="Cadastre quem está internado para montar a escala de acompanhantes e compartilhar o calendário com a família."
         >
@@ -162,7 +162,7 @@ import { PatientsService } from '../../services/patients.service';
     }
 
     .patient:hover {
-      border-color: var(--color-primary);
+      border-color: var(--color-primary-mark);
     }
 
     .patient__name {

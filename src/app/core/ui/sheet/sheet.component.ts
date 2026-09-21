@@ -45,9 +45,10 @@ import {
           }
         </div>
 
+        <!-- Ícone com texto: um ✕ sozinho não é rótulo neste sistema. -->
         <button type="button" class="sheet__close" (click)="dismissed.emit()">
-          <span class="sr-only">Fechar</span>
-          <span aria-hidden="true">✕</span>
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12" /></svg>
+          Fechar
         </button>
       </header>
 
@@ -112,14 +113,19 @@ import {
     }
 
     .sheet__close {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-1);
       flex-shrink: 0;
-      width: var(--touch-target);
-      height: var(--touch-target);
+      min-height: var(--touch-target);
+      margin: calc(var(--space-2) * -1) calc(var(--space-2) * -1) 0 0;
+      padding: 0 var(--space-3);
       background: transparent;
       border: none;
       border-radius: var(--radius-full);
-      font-size: var(--font-size-lg);
-      color: var(--color-text-muted);
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-medium);
+      color: var(--color-text);
       cursor: pointer;
     }
 
@@ -170,7 +176,7 @@ export class SheetComponent implements OnDestroy {
   readonly title = input.required<string>();
   readonly subtitle = input<string | null>(null);
 
-  /** Emitido no backdrop, no ✕ e no Esc. O pai decide se fecha. */
+  /** Emitido no backdrop, no "Fechar" e no Esc. O pai decide se fecha. */
   readonly dismissed = output<void>();
 
   private readonly panel = viewChild.required<ElementRef<HTMLElement>>('panel');

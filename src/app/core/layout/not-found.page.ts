@@ -10,7 +10,7 @@ import { EmptyStateComponent } from '../ui/empty-state/empty-state.component';
   template: `
     <div class="page">
       <app-empty-state
-        icon="🔎"
+        illustration="marca/fusquinha.png"
         title="Página não encontrada"
         description="O endereço pode ter sido digitado com um caractere a mais, ou o link ficou velho."
       >

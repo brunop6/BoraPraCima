@@ -4,14 +4,13 @@ import { Observable, map, of, switchMap, timer } from 'rxjs';
 
 import { handoffRulesOf } from '../../../core/patient/handoff-rules';
 import { DEFAULT_TIMEZONE, Patient } from '../../../core/patient/patient.model';
-import { IsoDate, addDays, datesFrom, todayIso } from '../../../core/utils/date.util';
+import { IsoDate, addDays, datesFrom, formatMonthYear, todayIso, weekDates } from '../../../core/utils/date.util';
 import { nowMinutes } from '../../../core/utils/time.util';
+import { CalendarView, DEFAULT_VIEW, calendarViewOf } from '../models/calendar-view.model';
 import { Companion } from '../models/companion.model';
 import { DayLayout, FULL_DAY_WINDOW, layoutDay } from '../utils/day-layout.util';
+import { CalendarViewPreference } from './calendar-view-preference.service';
 import { CompanionsService } from './companions.service';
-
-/** Três dias por vez — o que cabe no celular sem abreviar os nomes. */
-export const DAYS_VISIBLE = 3;
 
 /**
  * Estado da janela de dias visível no calendário.
@@ -24,9 +23,19 @@ export const DAYS_VISIBLE = 3;
 @Injectable()
 export class CalendarStore {
   private readonly companionsService = inject(CompanionsService);
+  private readonly preference = inject(CalendarViewPreference);
 
   readonly patientId = signal('');
   readonly anchorDate = signal<IsoDate>(todayIso());
+
+  /** Abre na visão que a pessoa escolheu da última vez neste navegador, se houver. */
+  readonly view = signal<CalendarView>(this.preference.read() ?? DEFAULT_VIEW);
+
+  private readonly option = computed(() => calendarViewOf(this.view()));
+
+  /** Quantos dias as setas andam, e o texto delas para leitor de tela. */
+  readonly stepDays = computed(() => this.option().days);
+  readonly stepLabel = computed(() => this.option().step);
 
   /**
    * O paciente, para a internação, o fuso e as regras de revezamento. Quem monta a
@@ -36,7 +45,16 @@ export class CalendarStore {
 
   readonly rules = computed(() => handoffRulesOf(this.patient() ?? {}));
 
-  readonly visibleDates = computed(() => datesFrom(this.anchorDate(), DAYS_VISIBLE));
+  /**
+   * A semana é sempre de domingo a sábado, seja qual for o dia âncora; dia e 3 dias
+   * começam exatamente nele.
+   */
+  readonly visibleDates = computed(() =>
+    this.view() === 'week' ? weekDates(this.anchorDate()) : datesFrom(this.anchorDate(), this.stepDays()),
+  );
+
+  /** `Setembro/2026`, do primeiro dia visível: a semana que cruza o mês fica com o de onde parte. */
+  readonly monthLabel = computed(() => formatMonthYear(this.visibleDates()[0]));
 
   /**
    * Carrega um dia a mais de cada lado: a véspera traz o turno que vira a noite e
@@ -100,17 +118,25 @@ export class CalendarStore {
     return this.visibleDates().map((date) => layoutDay(date, companions, this.window, context));
   });
 
-  readonly isShowingToday = computed(() => this.visibleDates().includes(todayIso()));
-
   next(): void {
-    this.anchorDate.update((date) => addDays(date, DAYS_VISIBLE));
+    this.anchorDate.update((date) => addDays(date, this.stepDays()));
   }
 
   previous(): void {
-    this.anchorDate.update((date) => addDays(date, -DAYS_VISIBLE));
+    this.anchorDate.update((date) => addDays(date, -this.stepDays()));
   }
 
-  goToToday(): void {
+  /**
+   * Trocar de visualização volta para hoje: quem muda de "3 dias" para "Semana"
+   * quer ver a semana de agora, não a que estava navegando. Tocar na que já está
+   * marcada também volta, e é o caminho de volta para hoje sem um botão só para isso.
+   *
+   * A escolha é guardada; só ela, porque é o gesto da pessoa. Abrir na visão padrão
+   * não grava nada.
+   */
+  setView(view: CalendarView): void {
+    this.view.set(view);
+    this.preference.write(view);
     this.anchorDate.set(todayIso());
   }
 }

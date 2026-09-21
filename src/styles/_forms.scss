@@ -45,7 +45,8 @@ textarea {
   width: 100%;
   min-height: var(--touch-target);
   padding: 0 var(--space-3);
-  background: var(--color-surface);
+  // Campo é superfície rebaixada; o contorno forte é o que o identifica.
+  background-color: var(--color-surface-sunken);
   color: var(--color-text);
   border: 1px solid var(--color-border-strong);
   border-radius: var(--radius-md);
@@ -72,7 +73,7 @@ select {
 input:focus,
 select:focus,
 textarea:focus {
-  border-color: var(--color-primary);
+  border-color: var(--color-primary-mark);
   box-shadow: 0 0 0 3px var(--color-primary-soft);
 }
 
@@ -82,10 +83,11 @@ textarea[aria-invalid='true'] {
   border-color: var(--color-danger);
 }
 
+// Desligado: o fundo já é rebaixado, então o sinal é o contorno fraco e o texto.
 input:disabled,
 select:disabled,
 textarea:disabled {
-  background: var(--color-surface-sunken);
+  border-color: var(--color-border);
   color: var(--color-text-muted);
   cursor: not-allowed;
 }

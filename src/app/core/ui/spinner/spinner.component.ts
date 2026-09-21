@@ -27,7 +27,7 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
       width: 2rem;
       height: 2rem;
       border: 3px solid var(--color-border-strong);
-      border-top-color: var(--color-primary);
+      border-top-color: var(--color-primary-mark);
       border-radius: var(--radius-full);
       animation: spin 800ms linear infinite;
     }

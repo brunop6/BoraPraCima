@@ -11,10 +11,9 @@ import {
 } from '../../../../core/color/member-color';
 import { PatientAccessService } from '../../../../core/patient/patient-access.service';
 import { DEFAULT_TIMEZONE } from '../../../../core/patient/patient.model';
-import { ButtonComponent } from '../../../../core/ui/button/button.component';
 import { SpinnerComponent } from '../../../../core/ui/spinner/spinner.component';
 import { ToastService } from '../../../../core/ui/toast/toast.service';
-import { formatDayMonth, formatRange } from '../../../../core/utils/date.util';
+import { formatDayMonth } from '../../../../core/utils/date.util';
 import { minutesToTime } from '../../../../core/utils/time.util';
 import { FamilyMember } from '../../../patients/models/family-member.model';
 import { FamilyMembersService } from '../../../patients/services/family-members.service';
@@ -23,8 +22,11 @@ import {
   ShiftSheetComponent,
   ShiftSubmit,
 } from '../../components/shift-sheet/shift-sheet.component';
+import { CalendarToolbarComponent } from '../../components/calendar-toolbar/calendar-toolbar.component';
 import { ThreeDayViewComponent } from '../../components/three-day-view/three-day-view.component';
+import { ViewSwitcherComponent } from '../../components/view-switcher/view-switcher.component';
 import { Companion } from '../../models/companion.model';
+import { CALENDAR_VIEWS } from '../../models/calendar-view.model';
 import { CalendarStore } from '../../services/calendar.store';
 import { CompanionAssignment, CompanionsService } from '../../services/companions.service';
 import { VacantGap } from '../../utils/day-layout.util';
@@ -39,38 +41,30 @@ import { VacantGap } from '../../utils/day-layout.util';
   selector: 'app-calendar-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [CalendarStore],
-  imports: [ThreeDayViewComponent, ShiftSheetComponent, ButtonComponent, SpinnerComponent],
+  imports: [
+    ThreeDayViewComponent,
+    ShiftSheetComponent,
+    SpinnerComponent,
+    ViewSwitcherComponent,
+    CalendarToolbarComponent,
+  ],
   template: `
-    <div class="toolbar">
-      <button type="button" class="toolbar__nav" (click)="store.previous()">
-        <span class="sr-only">Três dias antes</span>
-        <span aria-hidden="true">‹</span>
-      </button>
+    <app-view-switcher
+      [options]="views"
+      [value]="store.view()"
+      (changed)="store.setView($event)"
+    />
 
-      <p class="toolbar__range" aria-live="polite">{{ rangeLabel() }}</p>
-
-      <button type="button" class="toolbar__nav" (click)="store.next()">
-        <span class="sr-only">Três dias depois</span>
-        <span aria-hidden="true">›</span>
-      </button>
-
-      <button
-        type="button"
-        class="toolbar__today"
-        [disabled]="store.isShowingToday()"
-        (click)="store.goToToday()"
-      >
-        Hoje
-      </button>
-    </div>
+    <app-calendar-toolbar
+      [month]="store.monthLabel()"
+      [step]="store.stepLabel()"
+      (previous)="store.previous()"
+      (next)="store.next()"
+    />
 
     @if (store.isLoading()) {
       <app-spinner label="Carregando a escala…" />
     } @else {
-      <div class="add">
-        <app-button block variant="secondary" (click)="openNew(null)">Adicionar turno</app-button>
-      </div>
-
       <app-three-day-view
         [days]="store.days()"
         [window]="store.window"
@@ -78,6 +72,11 @@ import { VacantGap } from '../../utils/day-layout.util';
         (companionChosen)="selectedId.set($event.id)"
         (gapChosen)="openNew($event)"
       />
+
+      <!-- Só o "+": o nome acessível é que diz o que ele faz. -->
+      <button type="button" class="add" aria-label="Adicionar turno" (click)="openNew(null)">
+        <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+      </button>
     }
 
     @if (selected(); as companion) {
@@ -110,55 +109,41 @@ import { VacantGap } from '../../utils/day-layout.util';
       display: block;
     }
 
-    .toolbar {
+    /**
+     * Flutua no canto inferior direito, acima da barra de abas. Verde cheio com
+     * sombra: é o que paira por cima do calendário, e nada mais na tela usa isso.
+     */
+    .add {
+      position: fixed;
+      right: max(var(--space-4), env(safe-area-inset-right));
+      bottom: calc(var(--tabbar-height) + var(--space-4) + env(safe-area-inset-bottom));
+      z-index: var(--z-header);
       display: flex;
       align-items: center;
-      gap: var(--space-1);
-      padding: var(--space-2);
-      background: var(--color-surface);
-      border-bottom: 1px solid var(--color-border);
-    }
-
-    .toolbar__nav {
-      width: var(--touch-target);
-      height: var(--touch-target);
-      flex-shrink: 0;
-      background: transparent;
-      border: none;
+      justify-content: center;
+      width: 3.5rem;
+      height: 3.5rem;
+      padding: 0;
+      background: var(--color-primary);
+      color: var(--color-primary-contrast);
+      /* No escuro o verde do botão encosta no dos cards: o contorno o destaca. */
+      border: 1px solid var(--color-primary-edge);
       border-radius: var(--radius-full);
-      font-size: var(--font-size-xl);
-      color: var(--color-text);
+      box-shadow: var(--shadow-2);
       cursor: pointer;
+      transition: background var(--transition-fast);
     }
 
-    .toolbar__nav:hover {
-      background: var(--color-surface-sunken);
+    .add:hover {
+      background: var(--color-primary-hover);
     }
 
-    .toolbar__range {
-      flex: 1;
-      text-align: center;
-      font-weight: var(--font-weight-medium);
-    }
-
-    .toolbar__today {
-      min-height: var(--touch-target);
-      padding: 0 var(--space-3);
-      background: transparent;
-      border: 1px solid var(--color-border-strong);
-      border-radius: var(--radius-md);
-      font-size: var(--font-size-sm);
-      cursor: pointer;
-    }
-
-    .toolbar__today:disabled {
-      opacity: 0.4;
-      cursor: default;
-    }
-
-    .add {
-      padding: var(--space-3) var(--page-gutter);
-      border-bottom: 1px solid var(--color-border);
+    /* O anel de foco precisa do afastamento pintado para não sumir no verde. */
+    .add:focus-visible {
+      /* O foco global troca o raio para --radius-sm; o botão continua redondo. */
+      border-radius: var(--radius-full);
+      outline-offset: 2px;
+      box-shadow: 0 0 0 2px var(--color-surface), var(--shadow-2);
     }
   `,
 })
@@ -167,6 +152,7 @@ export class CalendarPage {
   readonly patientId = input.required<string>();
 
   protected readonly store = inject(CalendarStore);
+  protected readonly views = CALENDAR_VIEWS;
 
   private readonly auth = inject(AuthService);
   private readonly patientAccess = inject(PatientAccessService);
@@ -201,11 +187,6 @@ export class CalendarPage {
   );
 
   protected readonly timezone = computed(() => this.patient()?.timezone ?? DEFAULT_TIMEZONE);
-
-  protected readonly rangeLabel = computed(() => {
-    const dates = this.store.visibleDates();
-    return formatRange(dates[0], dates[dates.length - 1]);
-  });
 
   constructor() {
     effect(() => this.store.patientId.set(this.patientId()));

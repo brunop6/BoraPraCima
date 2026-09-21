@@ -167,7 +167,8 @@ export function formatLong(iso: IsoDate): string {
   return `${Number(iso.slice(8, 10))} de ${month} de ${iso.slice(0, 4)}`;
 }
 
-/** `'22/09 a 28/09'` */
-export function formatRange(from: IsoDate, to: IsoDate): string {
-  return `${formatDayMonth(from)} a ${formatDayMonth(to)}`;
+/** `'Setembro/2026'` */
+export function formatMonthYear(iso: IsoDate): string {
+  const month = MONTH_LONG[Number(iso.slice(5, 7)) - 1];
+  return `${month.charAt(0).toUpperCase()}${month.slice(1)}/${iso.slice(0, 4)}`;
 }

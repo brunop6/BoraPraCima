@@ -4,7 +4,7 @@ export type HexColor = string;
 const HEX_PATTERN = /^#[0-9a-f]{6}$/;
 
 /** Texto escuro do tema claro (`--color-text`): o mesmo que o app usa no resto. */
-export const DARK_TEXT: HexColor = '#16222b';
+export const DARK_TEXT: HexColor = '#15382e';
 export const LIGHT_TEXT: HexColor = '#ffffff';
 const BLACK_TEXT: HexColor = '#000000';
 
