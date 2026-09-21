@@ -78,11 +78,6 @@ import { VacantGap } from '../../utils/day-layout.util';
         (companionChosen)="selectedId.set($event.id)"
         (gapChosen)="openNew($event)"
       />
-
-      <p class="legend">
-        Cada cor é um familiar
-        <span class="legend__swatch" aria-hidden="true"></span> Vago
-      </p>
     }
 
     @if (selected(); as companion) {
@@ -164,25 +159,6 @@ import { VacantGap } from '../../utils/day-layout.util';
     .add {
       padding: var(--space-3) var(--page-gutter);
       border-bottom: 1px solid var(--color-border);
-    }
-
-    .legend {
-      display: flex;
-      align-items: center;
-      gap: var(--space-2);
-      justify-content: center;
-      padding: var(--space-3) var(--page-gutter) var(--space-6);
-      font-size: var(--font-size-sm);
-      color: var(--color-text-muted);
-    }
-
-    .legend__swatch {
-      width: 1rem;
-      height: 1rem;
-      margin-left: var(--space-3);
-      border-radius: var(--radius-sm);
-      background: var(--color-vacant-bg);
-      border: 1px dashed var(--color-vacant-border);
     }
   `,
 })

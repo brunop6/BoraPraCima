@@ -122,7 +122,7 @@ acompanha a preferência do sistema, para os turnos da madrugada.
 
 | Endereço | Tela | O que faz |
 |---|---|---|
-| `/p/:id` | **Calendário público** | A escala em modo consulta: nome do paciente, leito, três dias por vez, legenda e um atalho "Sou responsável pela escala". Se o link estiver desligado, avisa que não está disponível. |
+| `/p/:id` | **Calendário público** | A escala em modo consulta: nome do paciente, leito, três dias por vez e um atalho "Sou responsável pela escala". Se o link estiver desligado, avisa que não está disponível. |
 | `/entrar` | **Entrar** | Google ou e-mail e senha. Leva a "Esqueci minha senha" e "Criar uma conta". |
 | `/cadastrar` | **Criar conta** | Nome, e-mail e senha (mínimo de 6 caracteres), ou Google. |
 | `/recuperar-senha` | **Esqueci minha senha** | Envia por e-mail um link para criar uma senha nova. |
