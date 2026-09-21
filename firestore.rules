@@ -1,0 +1,173 @@
+rules_version = '2';
+
+// BoraPraCima — regras de acesso.
+//
+// Princípios:
+//   1. `patients/{pid}` e `patients/{pid}/companions` são legíveis SEM login quando
+//      `publicAccessEnabled == true`. É o link que circula na família.
+//   2. Nada mais é público. `familyMembers` (que guarda telefone) e `invites`
+//      (que guarda e-mails) exigem ser admin do paciente. Não há mais `schedules`
+//      nem `weeks`: a cobertura é só `companions`, e o "vago" é calculado no client.
+//   3. NÃO existe `match /{sub=**}` aqui. As regras do Firestore são combinadas com
+//      OU, então um curinga recursivo tornaria `invites` público por tabela.
+//      Cada subcollection tem seu próprio bloco explícito.
+//   4. Escrita sempre exige ser admin — exceto o aceite de convite, abaixo, que é
+//      o que permite alguém virar admin sem Cloud Functions.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    // '' quando não há e-mail no token: nunca casa com um convite real.
+    function authEmail() {
+      return signedIn() && request.auth.token.email != null
+        ? request.auth.token.email.lower()
+        : '';
+    }
+
+    function patientPath(pid) {
+      return /databases/$(database)/documents/patients/$(pid);
+    }
+
+    function patientData(pid) {
+      return get(patientPath(pid)).data;
+    }
+
+    function isAdmin(pid) {
+      return signedIn()
+        && exists(patientPath(pid))
+        && request.auth.uid in patientData(pid).adminIds;
+    }
+
+    function isPublic(pid) {
+      return exists(patientPath(pid))
+        && patientData(pid).publicAccessEnabled == true;
+    }
+
+    function canRead(pid) {
+      return isAdmin(pid) || isPublic(pid);
+    }
+
+    // O ID do convite é determinístico, então a regra o encontra sem busca.
+    function myInvitePath(pid) {
+      return /databases/$(database)/documents/invites/$(authEmail() + '_' + pid);
+    }
+
+    function hasPendingInvite(pid) {
+      return authEmail() != ''
+        && exists(myInvitePath(pid))
+        && get(myInvitePath(pid)).data.status == 'pending';
+    }
+
+    // ---------------------------------------------------------------- users
+
+    match /users/{uid} {
+      // `get` liberado a qualquer autenticado para exibir o nome dos co-admins
+      // na tela de equipe. `list` nunca: não se enumera a base de usuários.
+      allow get: if signedIn();
+      allow list: if false;
+
+      allow create, update: if signedIn() && request.auth.uid == uid;
+      allow delete: if false;
+    }
+
+    // ------------------------------------------------------------- patients
+
+    match /patients/{pid} {
+
+      // Leitura pública do documento em si — nome e leito aparecem no link.
+      allow get: if isAdmin(pid) || resource.data.publicAccessEnabled == true;
+
+      // "Meus pacientes". Exige o filtro array-contains no client; sem ele, a
+      // query é recusada. Nunca disponível para quem não está logado, o que
+      // impede varrer a coleção atrás de calendários públicos.
+      allow list: if signedIn() && request.auth.uid in resource.data.adminIds;
+
+      allow create: if signedIn()
+        && request.resource.data.ownerId == request.auth.uid
+        && request.resource.data.adminIds == [request.auth.uid]
+        && request.resource.data.name is string
+        && request.resource.data.name.size() > 0
+        && request.resource.data.publicAccessEnabled is bool;
+
+      allow delete: if signedIn() && resource.data.ownerId == request.auth.uid;
+
+      // Edição comum: admin altera os dados, mas ownerId é imutável e a lista de
+      // admins só muda pelas mãos do dono (ou pelo aceite de convite, abaixo).
+      allow update: if isAdmin(pid)
+        && request.resource.data.ownerId == resource.data.ownerId
+        && (
+          request.resource.data.adminIds == resource.data.adminIds
+          || (
+            resource.data.ownerId == request.auth.uid
+            && resource.data.ownerId in request.resource.data.adminIds
+          )
+        );
+
+      // ACEITE DE CONVITE. Quem aceita ainda não é admin, logo não passaria pela
+      // regra acima. Esta permite uma escrita cirúrgica: acrescentar o PRÓPRIO uid
+      // ao fim de adminIds, nada mais, e só com um convite pendente para o e-mail
+      // do token.
+      allow update: if signedIn()
+        && !(request.auth.uid in resource.data.adminIds)
+        && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['adminIds', 'updatedAt'])
+        && request.resource.data.adminIds == resource.data.adminIds.concat([request.auth.uid])
+        && hasPendingInvite(pid);
+
+      // --------------------------------------------------------- companions
+      // A única subcollection com leitura pública: é o calendário.
+      match /companions/{companionId} {
+        allow read: if canRead(pid);
+        allow write: if isAdmin(pid);
+      }
+
+      // ------------------------------------------------------ familyMembers
+      // Privada: guarda telefone. A tela pública usa `familyMemberName`,
+      // desnormalizado dentro de cada companion.
+      match /familyMembers/{familyMemberId} {
+        allow read, write: if isAdmin(pid);
+      }
+    }
+
+    // -------------------------------------------------------------- invites
+    // Coleção raiz. Duas consultas legítimas, e a regra cobre as duas:
+    //   - o convidado: where('email','==',<seu e-mail>)
+    //   - o admin:     where('patientId','==',<seu paciente>)
+    // Nunca pública: são endereços de e-mail da família.
+
+    match /invites/{inviteId} {
+      allow get, list: if signedIn()
+        && (resource.data.email == authEmail() || isAdmin(resource.data.patientId));
+
+      allow create: if isAdmin(request.resource.data.patientId)
+        && request.resource.data.status == 'pending'
+        && request.resource.data.email is string
+        && request.resource.data.email == request.resource.data.email.lower()
+        && inviteId == request.resource.data.email + '_' + request.resource.data.patientId
+        && request.resource.data.invitedBy == request.auth.uid;
+
+      allow delete: if isAdmin(resource.data.patientId);
+
+      // Admin revoga; o convidado só consegue marcar como aceito.
+      allow update: if isAdmin(resource.data.patientId)
+        || (
+          signedIn()
+          && resource.data.email == authEmail()
+          && resource.data.status == 'pending'
+          && request.resource.data.status == 'accepted'
+          && request.resource.data.diff(resource.data).affectedKeys()
+               .hasOnly(['status', 'acceptedAt', 'acceptedBy'])
+          && request.resource.data.acceptedBy == request.auth.uid
+        );
+    }
+
+    // Nada mais existe neste banco.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

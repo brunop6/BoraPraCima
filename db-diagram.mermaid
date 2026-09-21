@@ -1,0 +1,116 @@
+---
+title: Bora Pra Cima - Database Schema
+config:
+  layout: elk
+---
+erDiagram
+  %% Obs.: os IDs serão documentados, mas não aparecerão como campos nos documentos, pois podem ser inferidos a partir do path do doc no Firestore.
+  %% O mesmo acontece com FKs de subcollections, que podem ser inferidas a partir do path do doc pai.
+
+  %% Datas são strings 'YYYY-MM-DD' e horas são strings 'HH:mm', não Timestamp:
+  %% um turno de quinta 22:00-06:00 guardado como instante UTC vira sexta no
+  %% navegador de quem estiver em outro fuso. Ver core/utils/date.util.ts.
+
+  %% "USERS" collection
+  USERS {
+    string    userId                      PK
+    string    name
+    string    email                       UK
+    string    photoURL                    "NULLABLE"
+    timestamp createdAt
+    timestamp updatedAt
+  }
+  %% managedPatientsIds foi removido: a lista "meus pacientes" sai de
+  %% where('adminIds','array-contains',uid), e manter as duas pontas do vínculo
+  %% criaria duas fontes de verdade para a mesma coisa.
+
+  %% "PATIENTS" collection
+  PATIENTS {
+    string    patientId                   PK
+    string    name
+    string    room
+    string    hospital                    "NULLABLE, não aparece no link público"
+    string    admissionDate               "YYYY-MM-DD"
+    string    ownerId                     FK "criador, imutável"
+    string[]  adminIds                    FK "base de toda a autorização"
+    boolean   publicAccessEnabled         "interruptor do link público"
+    string    timezone
+    string    handoffWindowStart          "HH:mm, default 06:00, público"
+    string    handoffWindowEnd            "HH:mm, default 21:00, > início, público"
+    number    minStayMinutes              "default 360, entre 30 e 1440, público"
+    timestamp createdAt
+    timestamp updatedAt
+  }
+  %% Revezamento do hospital: a troca de acompanhante só acontece dentro da janela
+  %% [handoffWindowStart, handoffWindowEnd], e cada turno dura no mínimo
+  %% minStayMinutes. São dados DO PACIENTE porque variam por hospital, e ficam
+  %% legíveis pelo link público (não são sensíveis). Pacientes anteriores não têm os
+  %% campos: o client cai nos defaults (core/patient/handoff-rules.ts).
+
+  USERS ||--o{ PATIENTS : administra
+
+  %% "PATIENTS/{patientId}/FAMILY_MEMBERS" subcollection
+  %% Quem pode ser escalado. NÃO é usuário do sistema: a maior parte da família
+  %% não cria conta. Nunca lida pelo link público, porque guarda telefone.
+  FAMILY_MEMBERS {
+    string    familyMemberId              PK
+    string    patientId                   FK
+    string    name
+    string    phone                       "NULLABLE, nunca público"
+    boolean   active
+    timestamp createdAt
+    timestamp updatedAt
+  }
+
+  PATIENTS ||--o{ FAMILY_MEMBERS : tem
+
+  %% "PATIENTS/{patientId}/COMPANIONS" subcollection
+  %% TURNO: um acompanhante, num dia, de startTime a endTime. É a ÚNICA fonte de
+  %% cobertura. Não existe turno "vago" armazenado: vago é a lacuna entre turnos,
+  %% calculada no client (features/schedule/utils/day-layout.util.ts). Também não há
+  %% mais template semanal (SCHEDULES) nem marcador de semana gerada (WEEKS).
+  %%
+  %% Regras validadas no client antes de gravar (shift-rules.util.ts):
+  %%   - startTime e endTime dentro da janela do paciente
+  %%   - durationMinutes(startTime, endTime) >= minStayMinutes
+  %%   - sem sobreposição com outros turnos, inclusive entre dias
+  %% ID aleatório: sem molde não há chave natural. Dois responsáveis criando turnos
+  %% ao mesmo tempo podem gerar sobreposição; a UI mostra os dois lado a lado.
+  COMPANIONS {
+    string    companionId                 PK "aleatório"
+    string    patientId                   FK
+    string    date                        "YYYY-MM-DD, dia em que o turno COMEÇA"
+    string    startTime                   "HH:mm"
+    string    endTime                     "HH:mm; endTime <= startTime = termina no dia seguinte; igual = 24h"
+    string    familyMemberId              FK "NOT NULL"
+    string    familyMemberName            "NOT NULL, desnormalizado p/ tela pública"
+    string    note                        "NULLABLE"
+    timestamp createdAt
+    timestamp updatedAt
+    string    updatedBy                   FK
+  }
+  %% Removidos: scheduleId e dayOfWeek (vinham do template), e o NULLABLE de
+  %% familyMemberId (era o "vago" armazenado).
+
+  PATIENTS ||--o{ COMPANIONS : tem
+  FAMILY_MEMBERS ||--o{ COMPANIONS : acompanha
+
+  %% "INVITES" collection — RAIZ, não subcollection.
+  %% Listar "meus convites" exigiria collection group query, que regras aninhadas
+  %% em patients/{pid}/... não autorizam. ID determinístico para que a regra de
+  %% aceite localize o convite a partir do e-mail do token, sem ID aleatório.
+  INVITES {
+    string    inviteId                    PK "{email}_{patientId}"
+    string    email                       "minúsculas, comparado com o token"
+    string    patientId                   FK
+    string    patientName                 "desnormalizado"
+    string    invitedBy                   FK
+    string    invitedByName
+    string    status                      "pending | accepted | revoked"
+    timestamp createdAt
+    timestamp acceptedAt                  "NULLABLE"
+    string    acceptedBy                  FK "NULLABLE"
+  }
+
+  USERS ||--o{ INVITES : envia
+  PATIENTS ||--o{ INVITES : recebe
