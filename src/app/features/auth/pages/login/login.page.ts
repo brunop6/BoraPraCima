@@ -6,21 +6,23 @@ import { authErrorMessage, isUserCancelled } from '../../../../core/auth/auth-er
 import { AuthService } from '../../../../core/auth/auth.service';
 import { ButtonComponent } from '../../../../core/ui/button/button.component';
 import { FieldComponent } from '../../../../core/ui/field/field.component';
+import { AuthLayoutComponent } from '../../components/auth-layout/auth-layout.component';
+import { GoogleLogoComponent } from '../../components/google-logo/google-logo.component';
 
 @Component({
   selector: 'app-login-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ReactiveFormsModule, RouterLink, ButtonComponent, FieldComponent],
+  imports: [ReactiveFormsModule, RouterLink, AuthLayoutComponent, GoogleLogoComponent, ButtonComponent, FieldComponent],
   template: `
-    <div class="page">
+    <app-auth-layout>
       <header class="intro">
-        <h1>Bora Pra Cima</h1>
-        <p>Entre para organizar a escala de acompanhantes.</p>
+        <h1>Entrar</h1>
+        <p>Que bom te ver. Entre para organizar a escala de acompanhantes.</p>
       </header>
 
       <div class="stack">
         <app-button variant="secondary" size="lg" block [loading]="googleLoading()" (click)="withGoogle()">
-          Entrar com o Google
+          <app-google-logo />Entrar com o Google
         </app-button>
 
         <p class="divider"><span>ou com e-mail e senha</span></p>
@@ -53,13 +55,13 @@ import { FieldComponent } from '../../../../core/ui/field/field.component';
 
           <app-button type="submit" size="lg" block [loading]="loading()">Entrar</app-button>
         </form>
-
-        <div class="links">
-          <a routerLink="/recuperar-senha">Esqueci minha senha</a>
-          <a routerLink="/cadastrar">Criar uma conta</a>
-        </div>
       </div>
-    </div>
+
+      <nav authLinks class="links" aria-label="Outras opções">
+        <a routerLink="/recuperar-senha">Esqueci minha senha</a>
+        <a routerLink="/cadastrar">Criar uma conta</a>
+      </nav>
+    </app-auth-layout>
   `,
   styles: `
     .intro {
@@ -100,7 +102,6 @@ import { FieldComponent } from '../../../../core/ui/field/field.component';
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: var(--space-2);
       margin-top: var(--space-4);
     }
 
@@ -108,6 +109,7 @@ import { FieldComponent } from '../../../../core/ui/field/field.component';
       min-height: var(--touch-target);
       display: inline-flex;
       align-items: center;
+      font-weight: var(--font-weight-medium);
     }
   `,
 })

@@ -1,3 +1,4 @@
+import { NgOptimizedImage } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -6,6 +7,8 @@ import { authErrorMessage, isUserCancelled } from '../../../../core/auth/auth-er
 import { AuthService } from '../../../../core/auth/auth.service';
 import { ButtonComponent } from '../../../../core/ui/button/button.component';
 import { FieldComponent } from '../../../../core/ui/field/field.component';
+import { AuthLayoutComponent } from '../../components/auth-layout/auth-layout.component';
+import { GoogleLogoComponent } from '../../components/google-logo/google-logo.component';
 
 /** Senha mínima do Firebase Auth. */
 const MIN_PASSWORD_LENGTH = 6;
@@ -13,17 +16,30 @@ const MIN_PASSWORD_LENGTH = 6;
 @Component({
   selector: 'app-register-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ReactiveFormsModule, RouterLink, ButtonComponent, FieldComponent],
+  imports: [
+    NgOptimizedImage,
+    ReactiveFormsModule,
+    RouterLink,
+    AuthLayoutComponent,
+    GoogleLogoComponent,
+    ButtonComponent,
+    FieldComponent,
+  ],
   template: `
-    <div class="page">
+    <app-auth-layout compact>
       <header class="intro">
-        <h1>Criar conta</h1>
-        <p>Depois de entrar, você cadastra o paciente e monta a escala.</p>
+        <span class="intro__plate">
+          <img ngSrc="marca/chale.png" alt="" width="222" height="168" priority />
+        </span>
+        <div class="intro__text">
+          <h1>Criar conta</h1>
+          <p>Depois de entrar, você cadastra o paciente e monta a escala.</p>
+        </div>
       </header>
 
       <div class="stack">
         <app-button variant="secondary" size="lg" block [loading]="googleLoading()" (click)="withGoogle()">
-          Criar conta com o Google
+          <app-google-logo />Criar conta com o Google
         </app-button>
 
         <p class="divider"><span>ou com e-mail e senha</span></p>
@@ -63,22 +79,42 @@ const MIN_PASSWORD_LENGTH = 6;
 
           <app-button type="submit" size="lg" block [loading]="loading()">Criar conta</app-button>
         </form>
-
-        <div class="links">
-          <a routerLink="/entrar">Já tenho conta</a>
-        </div>
       </div>
-    </div>
+
+      <nav authLinks class="links" aria-label="Outras opções">
+        <a routerLink="/entrar">Já tenho conta</a>
+      </nav>
+    </app-auth-layout>
   `,
   styles: `
     .intro {
-      margin-bottom: var(--space-6);
-      text-align: center;
+      display: flex;
+      align-items: center;
+      gap: var(--space-4);
+      margin-bottom: var(--space-5);
     }
 
-    .intro p {
-      margin-top: var(--space-2);
+    /**
+     * A ilustração é raster com fundo creme próprio: vai sobre a placa bege nos
+     * dois temas, sem recolorir nem cortar em círculo.
+     */
+    .intro__plate {
+      flex: none;
+      padding: var(--space-2);
+      border-radius: var(--radius-lg);
+      background: var(--marca-bege-claro);
+      line-height: 0;
+    }
+
+    .intro__plate img {
+      width: 4.5rem;
+      height: auto;
+    }
+
+    .intro__text p {
+      margin-top: var(--space-1);
       color: var(--color-text-muted);
+      font-size: var(--font-size-sm);
     }
 
     .divider {
@@ -115,6 +151,7 @@ const MIN_PASSWORD_LENGTH = 6;
       min-height: var(--touch-target);
       display: inline-flex;
       align-items: center;
+      font-weight: var(--font-weight-medium);
     }
   `,
 })

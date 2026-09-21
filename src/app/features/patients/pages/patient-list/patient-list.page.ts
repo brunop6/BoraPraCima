@@ -65,7 +65,7 @@ import { PatientsService } from '../../services/patients.service';
         <app-empty-state
           illustration="marca/chale.png"
           title="Nenhum paciente ainda"
-          description="Cadastre quem está internado para montar a escala de acompanhantes e compartilhar o calendário com a família."
+          description="Peça para alguém adicionar o seu e-mail como responsável, ou cadastre quem está internado para montar a escala de acompanhantes e compartilhar o calendário com a família."
         >
           <app-button block size="lg" routerLink="/pacientes/novo">Cadastrar paciente</app-button>
         </app-empty-state>
@@ -76,7 +76,7 @@ import { PatientsService } from '../../services/patients.service';
               <a class="patient" [routerLink]="['/pacientes', patient.id]">
                 <span class="patient__name">{{ patient.name }}</span>
                 <span class="patient__meta">
-                  Leito {{ patient.room }} · internado desde {{ since(patient) }}
+                  Leito {{ patient.room }} · desde {{ since(patient) }}
                 </span>
                 @if (!patient.publicAccessEnabled) {
                   <span class="patient__badge">Link público desligado</span>
