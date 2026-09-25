@@ -14,8 +14,11 @@ import {
   withInMemoryScrolling,
   withRouterConfig,
 } from '@angular/router';
+import { provideServiceWorker } from '@angular/service-worker';
 
+import { environment } from '../environments/environment';
 import { provideFirebase } from './core/firebase/firebase.providers';
+import { AppUpdateService } from './core/pwa/app-update.service';
 import { ThemeService } from './core/theme/theme.service';
 import { routes } from './app.routes';
 
@@ -43,7 +46,19 @@ export const appConfig: ApplicationConfig = {
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes, ...routerFeatures),
     provideFirebase(),
+
+    /**
+     * `registerWhenStable` deixa o registro para depois do primeiro desenho: quem
+     * abre o link no corredor do hospital vê a escala antes de o app gastar rede
+     * baixando o cache para a próxima vez.
+     */
+    provideServiceWorker('ngsw-worker.js', {
+      enabled: environment.production,
+      registrationStrategy: 'registerWhenStable:30000',
+    }),
+
     provideAppInitializer(() => inject(ThemeService).start()),
+    provideAppInitializer(() => inject(AppUpdateService).start()),
     { provide: LOCALE_ID, useValue: 'pt-BR' },
   ],
 };

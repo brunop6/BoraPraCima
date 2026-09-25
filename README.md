@@ -1,12 +1,43 @@
+<div align="center">
+
+<img src="public/marca/emblema-144.png" alt="" width="112" height="112" />
+
 # Bora Pra Cima
 
-Gestor de escala de acompanhantes hospitalares.
+**Gestor de escala de acompanhantes hospitalares.**
+
+[**Abrir o app →**](https://bora-pra-cima.web.app)
+
+[![Angular](https://img.shields.io/badge/Angular-20.3-dd0031?logo=angular&logoColor=white)](https://angular.dev)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178c6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
+[![Firebase](https://img.shields.io/badge/Firebase-Firestore%20%2B%20Auth-ffca28?logo=firebase&logoColor=black)](https://firebase.google.com)
+[![PWA](https://img.shields.io/badge/PWA-instal%C3%A1vel-5a0fc8?logo=pwa&logoColor=white)](#pwa)
+
+</div>
+
+---
 
 Uma pessoa internada precisa de acompanhante em turnos definidos pelo hospital, e a
 família se organiza por mensagens soltas — o que deixa turnos descobertos e ninguém
 sabendo quem vai quando. Este sistema publica essa escala como um calendário que
 **qualquer pessoa da família abre por um link, sem criar conta**, e que só os
 responsáveis conseguem editar.
+
+Está no ar em **[bora-pra-cima.web.app](https://bora-pra-cima.web.app)**, sobre Firebase
+(Firestore, Auth e Hosting), e se instala na tela inicial do celular.
+
+### O que tem de interessante aqui
+
+- **Datas e horas são string, nunca `Timestamp`** — o turno da noite de quinta não pode
+  virar sexta no celular de quem está em outro fuso. [Por quê](#decisões-que-valem-saber-antes-de-mexer).
+- **"Vago" não existe no banco** — é a lacuna entre turnos, calculada a cada abertura do
+  calendário. Não há grade semanal para manter em dia.
+- **A mesma tela serve o público e o privado**, com um `readonly`; o que separa os dois é
+  a regra do Firestore, coberta por [41 testes contra o emulador](#testes).
+- **Sem backend próprio, por decisão** — propagação de nome e exclusão em cascata rodam no
+  navegador com `writeBatch`, e o aceite de convite é autorizado por uma regra.
+- **Acessibilidade levada a sério** — alvos de 48px, contraste calculado sobre a cor que o
+  usuário escolheu, e nenhum estado comunicado só pela cor.
 
 ## Como funciona
 
@@ -117,6 +148,37 @@ claro: alvos de toque de pelo menos 48px, texto grande e contraste alto. O tema 
 sozinho pela hora do aparelho: claro das 06:00 às 18:00 e escuro no resto, para os turnos
 da madrugada. Não segue a preferência do sistema e não há botão para trocar.
 
+## PWA
+
+O app se instala na tela inicial pelo **Adicionar à tela inicial** do navegador e abre sem
+barra de endereço, com o emblema e o nome próprios. É o que tira a escala do meio da
+conversa do WhatsApp: no corredor do hospital, um ícone é mais fácil de achar do que um
+link rolado para cima.
+
+| | |
+|---|---|
+| Manifesto | [`public/manifest.webmanifest`](public/manifest.webmanifest) |
+| Cache | [`ngsw-config.json`](ngsw-config.json), via `@angular/service-worker` |
+| Atualização | [`core/pwa/app-update.service.ts`](src/app/core/pwa/app-update.service.ts) |
+
+**O que fica em cache.** A casca inteira — `index.html`, CSS e **todos** os chunks de rota
+— é baixada de uma vez (`prefetch`), então trocar de tela não depende de rede. As imagens
+da marca e as fontes do Google são `lazy`: entram no cache na primeira vez que a tela que
+as usa aparece. O registro do service worker acontece só depois do primeiro desenho
+(`registerWhenStable`), para quem abre o link no 3G do hospital ver a escala antes de o
+app gastar banda com a próxima visita.
+
+**O que o app faz offline.** Abre, desenha a casca e espera os dados. A escala em si vem
+do Firestore e **precisa de rede** — o cache persistente do SDK está desligado de
+propósito ([por quê](#decisões-que-valem-saber-antes-de-mexer)).
+
+**Como a versão nova entra.** O service worker baixa a atualização em segundo plano e
+continua servindo a antiga; a troca acontece na **primeira mudança de tela** depois disso.
+Navegar já descarta o que estava preenchido, então é o único momento em que recarregar não
+custa nada a quem estava no meio de marcar um turno. Instalado, o app pode ficar semanas
+aberto na bandeja do celular sem recarregar, e por isso ele também confere se há versão
+nova toda vez que volta para o primeiro plano (no máximo uma vez a cada 30 minutos).
+
 ## Telas
 
 ### Sem login
@@ -151,14 +213,49 @@ existe cai numa página de "não encontrada" com o caminho de volta.
 |---|---|
 | Angular | 20.3 (LTS), standalone, signals, controle de fluxo nativo |
 | Firebase | Firestore + Auth via `@angular/fire` 20.0.1 |
-| Plano | **Spark (gratuito)** — não há Cloud Functions |
-| Hospedagem | Firebase Hosting |
+| PWA | `@angular/service-worker` 20.3 |
+| Hospedagem | Firebase Hosting, em `bora-pra-cima.web.app` |
 
-Sem Cloud Functions é uma decisão, não uma limitação aceita por acaso: a propagação de
-nomes e a exclusão de familiares rodam no navegador com `writeBatch`, e o aceite de convite é autorizado por uma
-regra do Firestore. Isso mantém o projeto sem cartão de crédito.
+Não há Cloud Functions: é uma decisão, não uma limitação aceita por acaso. A propagação de
+nomes e a exclusão de familiares rodam no navegador com `writeBatch`, e o aceite de convite
+é autorizado por uma regra do Firestore. Menos peças para operar, e toda a lógica do
+sistema fica em dois lugares que se testam juntos: o app e as regras.
+
+## Rodando localmente
+
+Precisa de **Node 22+** e da **[Firebase CLI](https://firebase.google.com/docs/cli)**.
+
+```bash
+npm install
+npm run emulators   # auth + firestore, em outro terminal
+npm start           # http://localhost:4200
+```
+
+A configuração de desenvolvimento
+([`environment.development.ts`](src/environments/environment.development.ts)) aponta para
+os emuladores, então nada toca o projeto de produção e não é preciso credencial de
+verdade. As chaves que estão em
+[`environment.ts`](src/environments/environment.ts) são públicas por natureza — a proteção
+real está em [`firestore.rules`](firestore.rules).
+
+### Vendo o PWA funcionar
+
+`ng serve` não gera o service worker: ele só existe no build de produção. Para exercitar
+instalação, cache e atualização:
+
+```bash
+npm run serve:pwa   # build + firebase serve em http://localhost:5055
+```
+
+> A porta do emulador de hosting em [`firebase.json`](firebase.json) é a 5000, que no
+> macOS costuma estar ocupada pelo receptor AirPlay; daí a 5055 no script.
 
 ## Testes
+
+```bash
+npm test          # 84 specs de unidade (Karma + Jasmine)
+npm run test:rules   # 41 casos contra o emulador do Firestore
+```
 
 As regras do Firestore são o ponto do sistema onde um erro tem consequência real — um link
 público que deixasse escrever, ou que expusesse os telefones da família, seria uma falha
@@ -172,8 +269,20 @@ visível para pessoas reais. Por isso rodam 41 casos contra o emulador, em três
 
 Rodam em série porque compartilham um emulador e cada suíte limpa o banco entre os casos.
 
-As regras de negócio puras (revezamento, lacunas do calendário, cor e contraste) têm specs
-de unidade.
+As regras de negócio puras (revezamento, lacunas do calendário, cor e contraste) e a troca
+de versão do PWA têm specs de unidade.
+
+## Publicando
+
+```bash
+npm run deploy                        # build + hosting + rules + índices
+npx firebase deploy --only hosting    # só o app
+npx firebase deploy --only firestore:rules
+```
+
+O `firebase.json` marca `ngsw-worker.js`, `ngsw.json` e `manifest.webmanifest` como
+`no-cache` e todo o resto do build como `immutable` — sem isso a CDN serviria um manifesto
+de versão velho e o app nunca sairia da versão antiga.
 
 ## Organização
 
@@ -186,7 +295,9 @@ src/app/
     firebase/     # único lugar que fala com @angular/fire; caminhos das coleções
     color/        # cor e transparência do familiar: paleta, contraste do texto
     patient/      # shared kernel: o tipo Patient e a leitura do paciente
+    pwa/          # troca de versão do service worker
     layout/       # moldura das telas de um paciente
+    theme/        # o tema que segue o relógio
     ui/           # botão, campo, painel, estado vazio, avisos
     utils/        # datas e horas como string
   features/
@@ -252,6 +363,23 @@ convites legíveis por quem abrisse o link público).
 
 **Não existe `match /{sub=**}` nas rules.** Cada subcollection tem seu bloco explícito.
 
+**O cache persistente do Firestore está desligado.** Ligá-lo (`persistentLocalCache`)
+deixaria a escala legível offline, mas quebraria uma promessa que as telas fazem: desligar
+o link público é instantâneo. Com o cache em disco, quem já tinha aberto o link
+continuaria vendo a escala no avião depois de o acesso ser cortado. O que o PWA guarda é
+só a casca do app.
+
+**O `background_color` do manifesto é o escuro (`#142c2b`).** É a tela que o Android pinta
+antes do primeiro desenho, e ela não pode variar com a hora como o resto do app. Entre
+piscar bege de madrugada, no quarto do hospital, e piscar escuro de dia, o projeto já
+escolheu o mesmo lado quando pôs o script de tema inline no `index.html`.
+
+**Os headers do Hosting excluem os arquivos do service worker do `immutable`.** O glob usa
+negação (`**/!(ngsw-worker|safety-worker|worker-basic.min).@(js|css|woff2)`) porque
+`ngsw-worker.js` não tem hash no nome: cacheado por um ano, ele prenderia o app numa
+versão. O comportamento está conferido contra o emulador de hosting, não só contra a
+documentação.
+
 **O budget de bundle inicial é 1.2 MB.** O SDK do Firestore responde pela maior parte;
 são ~256 kB comprimidos, que é o que de fato trafega. O budget existe para pegar
 regressões, não para forçar o impossível.
@@ -264,11 +392,17 @@ regressões, não para forçar o impossível.
 
 - **Apagar um paciente não apaga as subcollections.** O Firestore não faz cascata. Os
   documentos ficam órfãos e inacessíveis, já que as regras dos filhos dependem do
-  documento pai. Resolver direito pediria uma Cloud Function, o que tiraria o projeto
-  do plano gratuito.
+  documento pai. Resolver direito pediria uma Cloud Function, que o projeto evita de
+  propósito.
 - **`isPublic()` faz um `get()` por avaliação de regra.** O custo é baixo porque a
   regra de leitura pública não referencia `resource`, então o Firestore a avalia uma
   vez por consulta e não uma vez por documento. Se o volume crescer, o caminho é
   espelhar `publicAccessEnabled` em cada documento filho.
 - **O convite não dispara e-mail.** Enviar exigiria Cloud Functions. A tela de
   responsáveis diz isso e orienta a avisar a pessoa por WhatsApp.
+- **Offline, o app abre e fica esperando.** A casca vem do cache, mas nada avisa que a
+  escala não carregou por falta de rede: o que se vê é o mesmo spinner de sempre. Um
+  aviso de "sem conexão" resolveria sem precisar ligar o cache do Firestore.
+- **O `start_url` do manifesto é `/`.** Quem instalar o app a partir do link público cai
+  na tela de entrar ao abrir pelo ícone, porque o manifesto é um só para todo o site e
+  não sabe de que paciente veio a instalação.
