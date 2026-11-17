@@ -161,6 +161,14 @@ link rolado para cima.
 | Cache | [`ngsw-config.json`](ngsw-config.json), via `@angular/service-worker` |
 | Atualização | [`core/pwa/app-update.service.ts`](src/app/core/pwa/app-update.service.ts) |
 
+**Tela de abertura.** O emblema aparece numa placa bege de cantos arredondados sobre o
+fundo escuro da marca. No Android ela sai do manifesto (`background_color` mais o ícone
+de 512px, que por isso já vem com a placa arredondada); o iOS não monta abertura nenhuma
+sozinho, então [`index.html`](src/index.html) aponta 13 imagens de
+[`public/marca/abertura/`](public/marca/abertura), uma por tamanho de iPhone em pé. iPad e
+iPhone deitado abrem sem imagem. Os ícones *maskable* seguem quadrados de propósito: é o
+sistema que os recorta na forma do launcher.
+
 **O que fica em cache.** A casca inteira — `index.html`, CSS e **todos** os chunks de rota
 — é baixada de uma vez (`prefetch`), então trocar de tela não depende de rede. As imagens
 da marca e as fontes do Google são `lazy`: entram no cache na primeira vez que a tela que
